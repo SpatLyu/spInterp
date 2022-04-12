@@ -1,0 +1,27 @@
+Package: spInterp
+Title: A toolbox for spatial interpolation of meteorogical data
+Version: 0.6.000
+Authors@R: 
+    person(given = "Rodrigo",
+           family = "Lins Júnior",
+           role = c("aut", "cre"),
+           email = "rodrigo.lins@simepar.br")
+Description: Angular Distance Weighting and Inverse Distance Weighting methods for interpolation of irregular network of meteorological observations to a regular grid.
+Imports: 
+    raster,
+    maptools,
+    ncdf4,
+    geosphere,
+    magrittr,
+    data.table,
+    Rcpp
+Suggests: 
+    ggplot2,
+    testthat (>= 3.0.0)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Config/testthat/edition: 3
+LinkingTo: 
+    Rcpp
