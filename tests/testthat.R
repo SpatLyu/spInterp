@@ -1,4 +1,4 @@
 library(testthat)
-library(ADW)
+library(spInterp)
 
-test_check("ADW")
+test_check("spInterp")

@@ -5,6 +5,8 @@
 \alias{reexports}
 \alias{\%>\%}
 \alias{\%<>\%}
+\alias{\%$\%}
+\alias{set_names}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -12,6 +14,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{magrittr}{\code{\link[magrittr:compound]{\%<>\%}}, \code{\link[magrittr:pipe]{\%>\%}}}
+  \item{magrittr}{\code{\link[magrittr:exposition]{\%$\%}}, \code{\link[magrittr:compound]{\%<>\%}}, \code{\link[magrittr:pipe]{\%>\%}}, \code{\link[magrittr:aliases]{set_names}}}
 }}
 

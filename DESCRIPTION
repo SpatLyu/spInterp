@@ -7,16 +7,19 @@ Authors@R: c(
   person('Heyang', 'Song', role = "aut",
          email = "7800556@gmail.com", comment = c(ORCID = "0000-0002-4192-5603")))
 Description: Angular Distance Weighting and Inverse Distance Weighting methods for interpolation of irregular network of meteorological observations to a regular grid.
+Depends:
+    R (>= 3.5)
 Imports: 
-    raster,
-    maptools,
-    ncdf4,
-    geosphere,
+    abind,
+    sf,
     magrittr,
-    data.table,
+    data.table, 
+    plyr, matrixStats,
     Rcpp
 Suggests: 
     ggplot2,
+    geosphere, 
+    units,
     testthat (>= 3.0.0)
 License: GPL-3
 Encoding: UTF-8

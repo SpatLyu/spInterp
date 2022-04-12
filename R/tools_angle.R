@@ -27,9 +27,11 @@ ab_angle <- function(a, b) {
   lb = sqrt(b[, 1]^2 + b[, 2]^2)
   ans = sign(b[, 1] - a[, 1])*acos(dot / (la * lb))
   # 右侧为正
-  rad2deg(ans) 
+  setNames(ans, NULL)
+  # rad2deg(ans) 
 }
 
+#' @export
 angle = ab_angle
 
 # #' @export 

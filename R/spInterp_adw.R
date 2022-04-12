@@ -1,7 +1,9 @@
 # ' @param z A vector (N) with the values observeds in the points
 
-#' Weights of Angular Distance Weighting interpolation
-#'
+#' @title Angular Distance Weighting interpolation
+#' @name spInterp_adw
+#' 
+#' @description 
 #' The irregularly-spaced data are interpolated onto regular latitude-longitude
 #' grids by weighting each station according to its distance and angle from the
 #' center of a search radius.
@@ -12,7 +14,12 @@
 #' @param cdd the correlation decay distance (km), default (450)
 #' @param m distance weight (default 4)
 #' 
-#' @param n.station Number of stations used per point for interpolation. The default is 8.
+#' @param nstation.max Number of maximum stations used per point for 
+#' interpolation, (default 8).
+#' @param nstation.min Number of minimum stations used per point for
+#' interpolation, (default 3).
+#' 
+#' @inheritParams plyr::ldply
 #' @param ... other parameters to [plyr::ldply]
 #' 
 #' @return A data.frame with longitude, latitude and interpoled points
@@ -20,14 +27,17 @@
 #' @author Dongdong Kong and Heyang Song
 #' @references 
 #' 1. Xavier, A. C., King, C. W., & Scanlon, B. R. (2016). Daily gridded 
-#'    meteorological variables in Brazil (1980–2013). International Journal of 
-#'    Climatology, 36(6), 2644–2659. <doi:10.1002/joc.4518>
+#'    meteorological variables in Brazil (1980-2013). International Journal of 
+#'    Climatology, 36(6), 2644-2659. <doi:10.1002/joc.4518>
 #' 
 #' @example R/examples/ex-adw.R
+NULL
+
+#' @rdname spInterp_adw
 #' @export
 weight_adw <- function(points, range, res = 0.5, 
   cdd = 450, m = 4, nstation.max = 8, nstation.min = 3, 
-  .progress = "text", ...) 
+  .progress = "none", ...) 
 {
   points %<>% check_matrix()
   sites = points # backup
@@ -49,7 +59,7 @@ weight_adw <- function(points, range, res = 0.5,
 
     l_1deg = rdist.earth(c(lon, lat), c(lon, lat+1))[1] # 1deg
     delta_deg = cdd / l_1deg * 1.2 # cdd convert to deg, for large data
-    range2 <- c(lon, lon, lat, lat) + c(-1, 1)*delta_deg
+    range2 <- c(lon, lon, lat, lat) + c(-1, 1, -1, 1)*delta_deg
     
     point <- c(lon, lat)
     # point <- data.frame(x = lon, y = lat) # Data.frame com as coordenadas do ponto a estimar
@@ -87,28 +97,15 @@ weight_adw <- function(points, range, res = 0.5,
   }, .progress = .progress, ...) %>% set_names(iterators)
 }
 
-
-#' @examples
-#' set.seed(2)
-#' dd <- data.frame(
-#'   lon = runif(100, min = 110, max = 117),
-#'   lat = runif(100, min = 31, max = 37),
-#'   value = runif(100, min = -10, max = 10)
-#' )
-#' head(dd)
-#' dg <- adw(dd, gridSize = 1, cdd = 1e5)
-#' # dg is the dataframe of grid (mesh)
-#' head(dg)
-#' 
 #' @importFrom sf st_as_sf st_buffer st_coordinates st_distance st_geometry
 #' @importFrom stats na.omit
 #' @importFrom data.table data.table
 #' 
-#' @rdname weight_adw
+#' @rdname spInterp_adw
 #' @export
 weight_adw_sf <- function(points, range = NULL, res = 0.25, 
   cdd = 450, m = 4, nstation.max = 8, nstation.min = 3, 
-  .progress = "text", ...) 
+  .progress = "none", ...) 
 {
   if (is.null(range)) range = c(min(points$lon), max(points$lon), min(points$lat), max(points$lat))
   
@@ -154,10 +151,10 @@ weight_adw_sf <- function(points, range = NULL, res = 0.25,
 }
 
 
-#' spInterp_adw
+#' @param dat matrix `[npoint, ntime]`
+#' @importFrom data.table merge.data.table setkeyv
 #' 
-#' @param z matrix `[npoint, ntime]`
-#' @importFrom data.table merge.data.table
+#' @rdname spInterp_adw
 #' @export
 spInterp_adw <- function(points, dat, range, res = 1, ...) {
   l = weight_adw(points, range, res, ...)

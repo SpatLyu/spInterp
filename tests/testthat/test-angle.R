@@ -5,24 +5,24 @@ test_that("deg2rad works", {
   # East: 90
   # South: 180
   # West:
-  expect_equal(angle(
+  expect_equal(ab_angle(
     data.frame(x = 1, y = 0),
     data.frame(x = 0, y = 1)
-  ) %>% rad2deg(), 90)
+  ) %>% rad2deg(), -90)
   
-  expect_equal(angle(
+  expect_equal(ab_angle(
     c(1, 0), data.frame(x = 0, y = 1)
-  ) %>% rad2deg(), 90)
+  ) %>% rad2deg(), -90)
   
-  expect_equal(angle(c(1, 0), c(0, 1)) %>% rad2deg(), 90)
+  expect_equal(ab_angle(c(1, 0), c(0, 1)) %>% rad2deg(), -90)
 
-  expect_equal(angle(
+  expect_equal(ab_angle(
     data.frame(x = 0, y = 1),
     data.frame(x = 1, y = 0)
   ) %>% rad2deg(), 90)
 
-  expect_equal(angle(
+  expect_equal(ab_angle(
     data.frame(x = 0, y = 1),
     data.frame(x = -1, y = 0)
-  ) %>% rad2deg(), 90)
+  ) %>% rad2deg(), -90)
 })

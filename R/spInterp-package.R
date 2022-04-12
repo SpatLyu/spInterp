@@ -9,5 +9,5 @@
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  library(magrittr)
+  requireNamespace("magrittr")
 }
