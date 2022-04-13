@@ -24,8 +24,8 @@ remotes::install_github("rpkgs/spInterp")
 
 ## On top of
 
-1.  <https://github.com/rrodrigojrr/ADW>
-2.  <https://github.com/PanfengZhang/adw>
+1.  <https://github.com/PanfengZhang/adw>
+2.  <https://github.com/rrodrigojrr/ADW>
 
 ## Performance
 
@@ -39,33 +39,34 @@ loc <- TempBrazil[, 1:2] %>% set_names(c("lon", "lat"))
 dat <- TempBrazil[, 3] %>% as.matrix()  # Vector with observations in points
 
 range <- c(-78, -34, -36, 5)
-
+res = 1
 # Compare with the R package adw
 dd = cbind(loc, value = dat[,1])
 system.time({
-  r_adw <- adw::adw(dd, range[1], range[2], range[3], range[4], cdd = 450*1e3, gridSize = 1)  
+  r_adw <- adw::adw(dd, range[1], range[2], range[3], range[4], cdd = 450*1e3, gridSize = res)  
 })
 #>  用户  系统  流逝 
-#> 60.53  0.28 60.81
+#> 61.55  0.21 61.75
 
 system.time({
-  r_spInterp <- spInterp_adw(loc, dat, range, res = 1, cdd = 450)
+  r <- spInterp_adw(loc, dat, range, res = res, cdd = 450)
 })
 #> 用户 系统 流逝 
-#> 0.60 0.00 0.59
+#> 0.64 0.00 0.64
 ```
 
 ``` r
 df = rbind(
-  r_spInterp %$% cbind(coord, value = predicted[, 1], method = "spInterp"), 
+  r %$% cbind(coord, value = predicted[, 1], method = "spInterp"), 
   cbind(r_adw, method = "adw"))
 
 library(ggplot2)
 ggplot(df, aes(lon, lat)) + 
   geom_raster(aes(fill = value)) +
-  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  geom_point(data = loc, size = 1, shape = 3, color = "red") +
   facet_wrap(~method) + 
-  lims(x = range[1:2], y = range[3:4])
+  lims(x = range[1:2], y = range[3:4]) -> p
+p
 #> Warning: Raster pixels are placed at uneven horizontal intervals and will be
 #> shifted. Consider using geom_tile() instead.
 #> Warning: Raster pixels are placed at uneven vertical intervals and will be
@@ -74,6 +75,10 @@ ggplot(df, aes(lon, lat)) +
 ```
 
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
+
+``` r
+# Ipaper::write_fig(p, "figure1.pdf", 10, 6)
+```
 
 `spInterp` used the exactly same algrithm as that of `adw` package. But
 unlike `adw`, `spInterp` avoids using `sf` for spatial data processing

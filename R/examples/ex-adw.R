@@ -13,7 +13,7 @@ print(str(r))
 df = r %$% cbind(coord, value = predicted[, 1])
 ggplot(df, aes(lon, lat)) +
   geom_raster(aes(fill = value)) +
-  geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
   lims(x = range[1:2], y = range[3:4])
 
 

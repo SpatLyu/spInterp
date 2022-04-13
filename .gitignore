@@ -3,7 +3,12 @@
 .RData
 .Ruserdata
 
+
+# temporary scripts
+R/examples/test*
+
 # data
 *.nc
 
-R/examples/test*
+# Figures
+*.pdf

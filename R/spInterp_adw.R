@@ -57,7 +57,7 @@ weight_adw <- function(points, range, res = 0.5,
     lon <- grid$lon[i]
     lat <- grid$lat[i]
 
-    l_1deg = rdist.earth(c(lon, lat), c(lon, lat+1))[1] # 1deg
+    l_1deg = rdist.earth(c(lon, lat-1), c(lon, lat+1))[1]/2 # 1deg
     delta_deg = cdd / l_1deg * 1.2 # cdd convert to deg, for large data
     range2 <- c(lon, lon, lat, lat) + c(-1, 1, -1, 1)*delta_deg
     
@@ -84,7 +84,8 @@ weight_adw <- function(points, range, res = 0.5,
     
     coef <- (exp((-dist) / cdd))**m # Xavier 2016, Eq. 7
     theta <- .bearing(c(lon, lat), sites[ind, ]) %>% deg2rad()
-  
+    theta[dist <= 0.01] = 0 # site just on the grid
+
     alpha <- sapply(seq_along(dist), function(k) {
       diffTheta <- theta[-k] - theta[k]
       sum(coef[-k] * (1 - cos(diffTheta))) / sum(coef[-k]) # Xavier 2016, Eq 8
@@ -158,7 +159,7 @@ weight_adw_sf <- function(points, range = NULL, res = 0.25,
 #' @export
 spInterp_adw <- function(points, dat, range, res = 1, ...) {
   l = weight_adw(points, range, res, ...)
-  weight = do.call(rbind, l) %>% .[, .(lon, lat, I, w)]
+  weight = do.call(rbind, l)
   grid = weight[, .(lon, lat)] %>% unique() %>% setkeyv(c("lon", "lat"))
   
   ntime = ncol(dat)
@@ -166,7 +167,7 @@ spInterp_adw <- function(points, dat, range, res = 1, ...) {
   
   pred = lapply(set_names(1:ntime, names), function(i) {
     d = cbind(I = 1:nrow(dat), x = dat[, i])
-    merge(weight, d, by = "I", sort = FALSE) %>% 
+    merge(weight[, .(lon, lat, I, w)], d, by = "I", sort = FALSE) %>% 
       .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
   }) %>% do.call(cbind, .)
