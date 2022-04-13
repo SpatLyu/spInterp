@@ -1,17 +1,16 @@
-#' @title Angular Distance Weighting interpolation
-#' @name spInterp_adw
+#' Spatial interpolation
 #' 
 #' @description 
 #' The irregularly-spaced data are interpolated onto regular latitude-longitude
-#' grids by weighting each station according to its distance and angle from the
-#' center of a search radius.
+#' grids by weighting each station according to its distance or angle from the
+#' center of the search radius `cdd`.
 #' 
 #' @inheritParams cal_weight
 #' 
 #' @param dat matrix, `[npoint, ntime]`, the observed data used to interpolate grid
 #' @param fun.weight function to calculate weight, one of 
 #' `c("cal_weight", "cal_weight_sf")`.
-#' @param wFUN one of `wFUN_adw`, `wFUN_idw`
+#' @param wFUN one of `wFUN_adw`, `wFUN_idw`, see [wFUN()] for details
 #' 
 #' @author Dongdong Kong and Heyang Song
 #' @references 
@@ -19,15 +18,12 @@
 #'    meteorological variables in Brazil (1980-2013). International Journal of 
 #'    Climatology, 36(6), 2644-2659. <doi:10.1002/joc.4518>
 #' 
+#' @seealso [wFUN()], [cal_weight()]
 #' @example R/examples/ex-adw.R
-NULL
-
-#' @param dat matrix `[npoint, ntime]`
-#' @importFrom data.table merge.data.table setkeyv
 #' 
-#' @rdname spInterp_adw
+#' @importFrom data.table merge.data.table setkeyv
 #' @export
-spInterp_adw <- function(points, dat, range, res = 1, 
+spInterp <- function(points, dat, range, res = 1, 
   fun.weight = c("cal_weight", "cal_weight_sf"), 
   wFUN = c("wFUN_adw", "wFUN_idw"), 
   ...) 
@@ -52,4 +48,12 @@ spInterp_adw <- function(points, dat, range, res = 1,
       { merge(grid, ., all.x = TRUE)$value }
   }) %>% do.call(cbind, .)
   list(weight = weight, coord = grid, predicted = pred)
+}
+
+#' @rdname spInterp
+#' @export
+spInterp_adw <- function(points, dat, range, res = 1, 
+  fun.weight = c("cal_weight", "cal_weight_sf"), ...) {
+  
+  spInterp(points, dat, range, res, fun.weight, wFUN = "wFUN_adw", ...)
 }
