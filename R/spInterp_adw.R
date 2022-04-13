@@ -167,9 +167,8 @@ spInterp_adw <- function(points, dat, range, res = 1, ...) {
   pred = lapply(set_names(1:ntime, names), function(i) {
     d = cbind(I = 1:nrow(dat), x = dat[, i])
     merge(weight, d, by = "I", sort = FALSE) %>% 
-      .[, .(value = sum(x * w, na.rm = TRUE)), .(lon, lat)] %>% 
+      .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
-      # .[, .(lon, lat, value)]
   }) %>% do.call(cbind, .)
   list(weight = weight, coord = grid, predicted = pred)
 }
