@@ -10,8 +10,15 @@ check_matrix <- function(x) {
   }
 }
 
+#' @title angle functions
+#' @name angle
+#' 
+#' @keywords internal
 #' @export
-#' @rdname cal_azimuth
+NULL
+
+#' @rdname angle
+#' @export
 ab_angle <- function(a, b) {
   a %<>% check_matrix()
   b %<>% check_matrix()
@@ -25,10 +32,12 @@ ab_angle <- function(a, b) {
   # rad2deg(ans) 
 }
 
+#' @rdname angle
 #' @export
 angle = ab_angle
 
-#' cal_azimuth
+#' @keywords internal
+#' @rdname angle
 #' @export
 cal_azimuth <- function(x) {
   ab_angle(c(0, 1), x)
@@ -53,9 +62,11 @@ cal_azimuth <- function(x) {
 #   sqrt((abs(from[, 1] - to[, 1])^2) + (abs(from[, 2] - to[, 2])^2))
 # }
 
+#' @rdname angle
 #' @export 
 deg2rad <- function(x) x * pi / 180
 
+#' @rdname angle
 #' @export 
 rad2deg <- function(x) x * 180 /pi 
 

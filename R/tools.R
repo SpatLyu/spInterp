@@ -1,3 +1,5 @@
+#' make_grid
+#' @keywords internal
 #' @export
 make_grid <- function(range, res = 0.5) {
   lon <- seq(range[1] + res / 2, range[2], res)
@@ -5,6 +7,7 @@ make_grid <- function(range, res = 0.5) {
   expand.grid(lon = lon, lat = lat) %>% cbind(I = 1:nrow(.)) %>% data.table()
 }
 
+#' @rdname make_grid
 #' @export
 make_dims <- function(range, res = 0.5) {
   lon <- seq(range[1] + res / 2, range[2], res)

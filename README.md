@@ -27,6 +27,12 @@ remotes::install_github("rpkgs/spInterp")
 1.  <https://github.com/PanfengZhang/adw>
 2.  <https://github.com/rrodrigojrr/ADW>
 
+## TODO
+
+- [ ] Thin Plate Spline
+- [ ] P-Spline
+- [ ] Krige
+
 ## Performance
 
 ``` r

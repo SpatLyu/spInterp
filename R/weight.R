@@ -11,7 +11,8 @@
 #' interpolation, (default 8).
 #' @param nstation.min Number of minimum stations used per point for
 #' interpolation, (default 3).
-#'
+#' @param wFUN `wFUN_*` functions, see [wFUN()] for details
+#' 
 #' @inheritParams plyr::ldply
 #' @param ... other parameters to [plyr::ldply]
 #' 
@@ -21,7 +22,7 @@
 cal_weight <- function(points, range, res = 0.5, 
   cdd = 450, m = 4, 
   nstation.max = 8, nstation.min = 3, 
-  wFUN = c("wFUN_adw", "wFUN_idw"),
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   .progress = "none", ...) 
 {
   wFUN = match.arg(wFUN) %>% get()
@@ -85,7 +86,7 @@ cal_weight <- function(points, range, res = 0.5,
 #' @export
 cal_weight_sf <- function(points, range = NULL, res = 0.25, 
   cdd = 450, m = 4, nstation.max = 8, nstation.min = 3, 
-  wFUN = c("wFUN_adw", "wFUN_idw"),
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   .progress = "none", ...) 
 {
   wFUN = match.arg(wFUN) %>% get()

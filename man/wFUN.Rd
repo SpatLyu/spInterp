@@ -11,7 +11,7 @@
 \usage{
 wFUN_adw(dist, m = 4, cdd = 450, point, sites, ...)
 
-wFUN_idw(dist, m, ...)
+wFUN_idw(dist, m = 2, ...)
 
 wFUN_mean(dist, ...)
 

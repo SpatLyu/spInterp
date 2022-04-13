@@ -33,7 +33,7 @@ wFUN_adw <- function(dist, m = 4, cdd = 450, point, sites, ...) {
 
 #' @rdname wFUN
 #' @export
-wFUN_idw <- function(dist, m, ...) {
+wFUN_idw <- function(dist, m = 2, ...) {
   w = 1/dist^m
   w / sum(w)
 }

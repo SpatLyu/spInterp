@@ -15,7 +15,6 @@
 #   ans
 # }
 
-#' @export
 rowvec <- function(x, ...) matrix(x, nrow = 1, ...)
 
 `%||%` <- function(x, y) {
@@ -55,7 +54,6 @@ last <- function(x) {
   if (is.null(x)) NULL else x[length(x)]
 }
 
-#' @export
 findn_small <- function(x, n = 10, decreasing = FALSE, fill.na = TRUE) {
   N <- length(x)
   n2 <- pmin(N, n)

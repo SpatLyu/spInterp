@@ -11,7 +11,7 @@ spInterp(
   range,
   res = 1,
   fun.weight = c("cal_weight", "cal_weight_sf"),
-  wFUN = c("wFUN_adw", "wFUN_idw"),
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   ...
 )
 
@@ -36,7 +36,7 @@ spInterp_adw(
 \item{fun.weight}{function to calculate weight, one of
 \code{c("cal_weight", "cal_weight_sf")}.}
 
-\item{wFUN}{one of \code{wFUN_adw}, \code{wFUN_idw}, see \code{\link[=wFUN]{wFUN()}} for details}
+\item{wFUN}{\verb{wFUN_*} functions, see \code{\link[=wFUN]{wFUN()}} for details}
 
 \item{...}{other parameters to \link[plyr:ldply]{plyr::ldply}}
 }

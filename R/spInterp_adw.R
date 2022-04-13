@@ -10,7 +10,6 @@
 #' @param dat matrix, `[npoint, ntime]`, the observed data used to interpolate grid
 #' @param fun.weight function to calculate weight, one of 
 #' `c("cal_weight", "cal_weight_sf")`.
-#' @param wFUN one of `wFUN_adw`, `wFUN_idw`, see [wFUN()] for details
 #' 
 #' @author Dongdong Kong and Heyang Song
 #' @references 
@@ -25,7 +24,7 @@
 #' @export
 spInterp <- function(points, dat, range, res = 1, 
   fun.weight = c("cal_weight", "cal_weight_sf"), 
-  wFUN = c("wFUN_adw", "wFUN_idw"), 
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"), 
   ...) 
 {
   fun.weight = match.arg(fun.weight) %>% get()

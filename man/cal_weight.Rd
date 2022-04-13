@@ -13,7 +13,7 @@ cal_weight(
   m = 4,
   nstation.max = 8,
   nstation.min = 3,
-  wFUN = c("wFUN_adw", "wFUN_idw"),
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   .progress = "none",
   ...
 )
@@ -26,7 +26,7 @@ cal_weight_sf(
   m = 4,
   nstation.max = 8,
   nstation.min = 3,
-  wFUN = c("wFUN_adw", "wFUN_idw"),
+  wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   .progress = "none",
   ...
 )
@@ -48,6 +48,8 @@ interpolation, (default 8).}
 
 \item{nstation.min}{Number of minimum stations used per point for
 interpolation, (default 3).}
+
+\item{wFUN}{\verb{wFUN_*} functions, see \code{\link[=wFUN]{wFUN()}} for details}
 
 \item{.progress}{name of the progress bar to use, see
 \code{\link[plyr]{create_progress_bar}}}

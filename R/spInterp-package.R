@@ -1,3 +1,4 @@
+#' @name spInterp-package
 #' @keywords internal
 #' @import magrittr
 #' @importFrom stats approx weighted.mean
@@ -11,7 +12,7 @@ NULL
   if (getRversion() >= "2.15.1") {
     utils::globalVariables(
       c(
-        ".", "lon", "lat", "w"
+        ".", "lon", "lat", "w", "x"
       )
     )
   }
