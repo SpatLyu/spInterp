@@ -90,23 +90,23 @@ rdist.earth <- function (x1, x2 = NULL, miles = FALSE, R = NULL) {
   }
 }
 
-cal_hw <- function(point, dist = 450) {
-  funx = function(dx) {
-    p2 = point + c(dx, 0)
-    # p2[, 1] %<>% pmin(180)
-    dist2 = rdist.earth(point, p2)
-    abs(dist2 - dist)
-  }
-  funy = function(dy) {
-    p2 = point + c(0, dy)
-    # p2[, 2] %<>% pmin(90)
-    dist2 = rdist.earth(point, p2)
-    abs(dist2 - dist)
-  }
-  dx = optimize(funx, c(0.001, 90))$minimum
-  dy = optimize(funy, c(0.001, 90))$minimum  
-  c(dx = dx, dy = dy)
-}
+# cal_hw <- function(point, dist = 450) {
+#   funx = function(dx) {
+#     p2 = point + c(dx, 0)
+#     # p2[, 1] %<>% pmin(180)
+#     dist2 = rdist.earth(point, p2)
+#     abs(dist2 - dist)
+#   }
+#   funy = function(dy) {
+#     p2 = point + c(0, dy)
+#     # p2[, 2] %<>% pmin(90)
+#     dist2 = rdist.earth(point, p2)
+#     abs(dist2 - dist)
+#   }
+#   dx = optimize(funx, c(0.001, 90))$minimum
+#   dy = optimize(funy, c(0.001, 90))$minimum  
+#   c(dx = dx, dy = dy)
+# }
 
 # https://github.com/rspatial/geosphere/blob/master/R/bearing.R
 .bearing <- function(p1, p2) {

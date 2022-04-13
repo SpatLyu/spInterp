@@ -30,7 +30,14 @@ weight_adw_sf(
   ...
 )
 
-spInterp_adw(points, dat, range, res = 1, ...)
+spInterp_adw(
+  points,
+  dat,
+  range,
+  res = 1,
+  fun.weight = c("weight_adw", "weight_adw_sf"),
+  ...
+)
 }
 \arguments{
 \item{points}{A matrix (N,2) with longitude and latitude of points of data observed}
@@ -80,9 +87,16 @@ print(str(r))
 df = r \%$\% cbind(coord, value = predicted[, 1])
 ggplot(df, aes(lon, lat)) +
   geom_raster(aes(fill = value)) +
-  geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
   lims(x = range[1:2], y = range[3:4])
 
+
+r_sf = spInterp_adw(loc, dat, range, res = 1, cdd = 450, fun.weight = "weight_adw_sf")
+df_sf = r_sf \%$\% cbind(coord, value = predicted[, 1])
+ggplot(df_sf, aes(lon, lat)) +
+  geom_raster(aes(fill = value)) +
+  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  lims(x = range[1:2], y = range[3:4])
 
 # set cdd = 1000
 r = spInterp_adw(loc, dat, range, res = 1, cdd = 1000)

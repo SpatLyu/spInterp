@@ -157,8 +157,14 @@ weight_adw_sf <- function(points, range = NULL, res = 0.25,
 #' 
 #' @rdname spInterp_adw
 #' @export
-spInterp_adw <- function(points, dat, range, res = 1, ...) {
-  l = weight_adw(points, range, res, ...)
+spInterp_adw <- function(points, dat, range, res = 1, 
+  fun.weight = c("weight_adw", "weight_adw_sf"), ...) 
+{
+  if (!is.matrix(dat)) dat %<>% as.matrix()
+  if (nrow(points) != nrow(dat)) stop("Length of points and dat should be equal!")
+
+  fun.weight = match.arg(fun.weight) %>% get()
+  l = fun.weight(points, range, res, ...)
   weight = do.call(rbind, l)
   grid = weight[, .(lon, lat)] %>% unique() %>% setkeyv(c("lon", "lat"))
   
