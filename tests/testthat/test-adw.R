@@ -16,7 +16,7 @@ test_that("spInterp_adw works", {
   expect_equal(r$weight[is.na(w), ] %>% nrow, 0) # has no NA value in weight
   
   # weight <- weight_adw(loc, range = range, res = 1)
-  r2 = spInterp_adw(loc, dat, range, res = 5, cdd = 450, fun.weight = "weight_adw_sf")
+  r2 = spInterp_adw(loc, dat, range, res = 5, cdd = 450, fun.weight = "cal_weight_sf")
   names_weight = c("lon", "lat", "I", "dist", "angle", "w")
   expect_equal(r$weight %>% colnames(), names_weight)
 })

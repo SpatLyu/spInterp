@@ -13,18 +13,21 @@ spInterp_bilinear(
 )
 }
 \arguments{
-\item{z}{3d array (lon, lat, time), with the dimension of `[nlon, nlat,
-ntime]`. `image(z[,,1])` should look normal.}
+\item{z}{3d array (lon, lat, time), with the dimension of \verb{[nlon, nlat, ntime]}. \code{image(z[,,1])} should look normal.}
 
-\item{grid}{A list object with lon`, `lat` and `loc`.
-- `lon`: numeric, `[nlon]`
-- `lat`: numeric, `[nlon]`}
+\item{grid}{A list object with lon\verb{, }lat\code{and}loc`.
+\itemize{
+\item \code{lon}: numeric, \verb{[nlon]}
+\item \code{lat}: numeric, \verb{[nlon]}
+}}
 
-\item{grid_target}{A list object with `lon`, `lat` and `loc`.
-- `lon`: numeric, `[nlon]`
-- `lat`: numeric, `[nlon]`
-- `loc`: a data.frame with the column of c("x", "y"), with the row length of
-`nlon*nlat`.}
+\item{grid_target}{A list object with \code{lon}, \code{lat} and \code{loc}.
+\itemize{
+\item \code{lon}: numeric, \verb{[nlon]}
+\item \code{lat}: numeric, \verb{[nlon]}
+\item \code{loc}: a data.frame with the column of c("x", "y"), with the row length of
+\code{nlon*nlat}.
+}}
 
 \item{na.rm}{If true, Na value in margin will be fixed.}
 }
@@ -33,7 +36,7 @@ Bilinear interpolation for 3d array
 }
 \note{
 High resolution interpolating to low resolution will lead to unreliable
-result, if `cellsize.new/cellsize.origin > 2`.
+result, if \code{cellsize.new/cellsize.origin > 2}.
 }
 \examples{
 \dontrun{

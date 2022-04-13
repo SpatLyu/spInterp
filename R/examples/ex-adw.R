@@ -17,7 +17,7 @@ ggplot(df, aes(lon, lat)) +
   geom_point(data = loc, size = 0.5, shape = 3, color = "red") +
   lims(x = range[1:2], y = range[3:4])
 
-r_sf = spInterp_adw(loc, dat, range, res = res, cdd = 450, fun.weight = "weight_adw_sf")
+r_sf = spInterp_adw(loc, dat, range, res = res, cdd = 450, fun.weight = "cal_weight_sf")
 df_sf = r_sf %$% cbind(coord, value = predicted[, 1])
 ggplot(df_sf, aes(lon, lat)) +
   geom_raster(aes(fill = value)) +

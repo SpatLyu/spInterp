@@ -2,69 +2,33 @@
 % Please edit documentation in R/spInterp_adw.R
 \name{spInterp_adw}
 \alias{spInterp_adw}
-\alias{weight_adw}
-\alias{weight_adw_sf}
 \title{Angular Distance Weighting interpolation}
 \usage{
-weight_adw(
-  points,
-  range,
-  res = 0.5,
-  cdd = 450,
-  m = 4,
-  nstation.max = 8,
-  nstation.min = 3,
-  .progress = "none",
-  ...
-)
-
-weight_adw_sf(
-  points,
-  range = NULL,
-  res = 0.25,
-  cdd = 450,
-  m = 4,
-  nstation.max = 8,
-  nstation.min = 3,
-  .progress = "none",
-  ...
-)
-
 spInterp_adw(
   points,
   dat,
   range,
   res = 1,
-  fun.weight = c("weight_adw", "weight_adw_sf"),
+  fun.weight = c("cal_weight", "cal_weight_sf"),
+  wFUN = c("wFUN_adw", "wFUN_idw"),
   ...
 )
 }
 \arguments{
 \item{points}{A matrix (N,2) with longitude and latitude of points of data observed}
 
-\item{range}{`[xmin, xmax, ymin, ymax]`}
+\item{dat}{matrix \verb{[npoint, ntime]}}
 
-\item{res}{the grid resolution}
+\item{range}{\verb{[xmin, xmax, ymin, ymax]}}
 
-\item{cdd}{the correlation decay distance (km), default (450)}
+\item{res}{the grid resolution (degree)}
 
-\item{m}{distance weight (default 4)}
+\item{fun.weight}{function to calculate weight, one of
+\code{c("cal_weight", "cal_weight_sf")}.}
 
-\item{nstation.max}{Number of maximum stations used per point for 
-interpolation, (default 8).}
+\item{wFUN}{one of \code{wFUN_adw}, \code{wFUN_idw}}
 
-\item{nstation.min}{Number of minimum stations used per point for
-interpolation, (default 3).}
-
-\item{.progress}{name of the progress bar to use, see
-\code{\link[plyr]{create_progress_bar}}}
-
-\item{...}{other parameters to [plyr::ldply]}
-
-\item{dat}{matrix `[npoint, ntime]`}
-}
-\value{
-A data.frame with longitude, latitude and interpoled points
+\item{...}{other parameters to \link[plyr:ldply]{plyr::ldply}}
 }
 \description{
 The irregularly-spaced data are interpolated onto regular latitude-longitude
@@ -80,26 +44,26 @@ loc <- TempBrazil[, 1:2] \%>\% set_names(c("lon", "lat"))
 dat <- TempBrazil[, 3] \%>\% as.matrix()  # Vector with observations in points
 
 range <- c(-78, -34, -36, 5)
+res = 1
 # weight <- weight_adw(loc, range = range, res = 1)
-r = spInterp_adw(loc, dat, range, res = 1, cdd = 450)
+r = spInterp_adw(loc, dat, range, res = res, cdd = 450)
 print(str(r))
 
 df = r \%$\% cbind(coord, value = predicted[, 1])
 ggplot(df, aes(lon, lat)) +
   geom_raster(aes(fill = value)) +
-  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  geom_point(data = loc, size = 0.5, shape = 3, color = "red") +
   lims(x = range[1:2], y = range[3:4])
 
-
-r_sf = spInterp_adw(loc, dat, range, res = 1, cdd = 450, fun.weight = "weight_adw_sf")
+r_sf = spInterp_adw(loc, dat, range, res = res, cdd = 450, fun.weight = "cal_weight_sf")
 df_sf = r_sf \%$\% cbind(coord, value = predicted[, 1])
 ggplot(df_sf, aes(lon, lat)) +
   geom_raster(aes(fill = value)) +
-  # geom_point(data = loc, size = 2.5, shape = 3, color = "red") +
+  geom_point(data = loc, size = 0.5, shape = 3, color = "red") +
   lims(x = range[1:2], y = range[3:4])
 
 # set cdd = 1000
-r = spInterp_adw(loc, dat, range, res = 1, cdd = 1000)
+r = spInterp_adw(loc, dat, range, res = res, cdd = 1000)
 df = r \%$\% cbind(coord, value = predicted[, 1])
 
 ggplot(df, aes(lon, lat)) +
@@ -108,9 +72,11 @@ ggplot(df, aes(lon, lat)) +
   lims(x = range[1:2], y = range[3:4])
 }
 \references{
-1. Xavier, A. C., King, C. W., & Scanlon, B. R. (2016). Daily gridded 
-   meteorological variables in Brazil (1980-2013). International Journal of 
-   Climatology, 36(6), 2644-2659. <doi:10.1002/joc.4518>
+\enumerate{
+\item Xavier, A. C., King, C. W., & Scanlon, B. R. (2016). Daily gridded
+meteorological variables in Brazil (1980-2013). International Journal of
+Climatology, 36(6), 2644-2659. \url{doi:10.1002/joc.4518}
+}
 }
 \author{
 Dongdong Kong and Heyang Song

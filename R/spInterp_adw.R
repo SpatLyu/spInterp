@@ -1,5 +1,3 @@
-# ' @param z A vector (N) with the values observeds in the points
-
 #' @title Angular Distance Weighting interpolation
 #' @name spInterp_adw
 #' 
@@ -8,22 +6,13 @@
 #' grids by weighting each station according to its distance and angle from the
 #' center of a search radius.
 #' 
-#' @param points A matrix (N,2) with longitude and latitude of points of data observed 
-#' @param range `[xmin, xmax, ymin, ymax]`
-#' @param res the grid resolution
-#' @param cdd the correlation decay distance (km), default (450)
-#' @param m distance weight (default 4)
+#' @inheritParams cal_weight
 #' 
-#' @param nstation.max Number of maximum stations used per point for 
-#' interpolation, (default 8).
-#' @param nstation.min Number of minimum stations used per point for
-#' interpolation, (default 3).
+#' @param dat matrix, `[npoint, ntime]`, the observed data used to interpolate grid
+#' @param fun.weight function to calculate weight, one of 
+#' `c("cal_weight", "cal_weight_sf")`.
+#' @param wFUN one of `wFUN_adw`, `wFUN_idw`
 #' 
-#' @inheritParams plyr::ldply
-#' @param ... other parameters to [plyr::ldply]
-#' 
-#' @return A data.frame with longitude, latitude and interpoled points
-#'
 #' @author Dongdong Kong and Heyang Song
 #' @references 
 #' 1. Xavier, A. C., King, C. W., & Scanlon, B. R. (2016). Daily gridded 
@@ -33,138 +22,23 @@
 #' @example R/examples/ex-adw.R
 NULL
 
-#' @rdname spInterp_adw
-#' @export
-weight_adw <- function(points, range, res = 0.5, 
-  cdd = 450, m = 4, nstation.max = 8, nstation.min = 3, 
-  .progress = "none", ...) 
-{
-  points %<>% check_matrix()
-  sites = points # backup
-  
-  st_LON = points[, 1] 
-  st_LAT = points[, 2]
-  .INDEX = INDEX = seq_along(st_LON)
-
-  nsite = nrow(points)
-  
-  grid = make_grid(range, res)
-  ngrid = nrow(grid)
-  nstation.max <- pmin(nsite, nstation.max)
-  
-  iterators = (1:ngrid) %>% set_names(., .)
-  plyr::llply(iterators, function(i) {
-    lon <- grid$lon[i]
-    lat <- grid$lat[i]
-
-    l_1deg = rdist.earth(c(lon, lat-1), c(lon, lat+1))[1]/2 # 1deg
-    delta_deg = cdd / l_1deg * 1.2 # cdd convert to deg, for large data
-    range2 <- c(lon, lon, lat, lat) + c(-1, 1, -1, 1)*delta_deg
-    
-    point <- c(lon, lat)
-    # point <- data.frame(x = lon, y = lat) # Data.frame com as coordenadas do ponto a estimar
-    # dist <- distance(from = point, to = points) # Dist?ncia euclidianda entre os pontos
-    
-    if (nsite >= 200) {
-      .subset = which(st_LON >= range[1] & st_LON <= range2[2] & 
-                      st_LAT >= range[3] & st_LAT <= range2[4])
-      if (length(.subset) < nstation.min) return(NULL)
-      sites = points[.subset, ]
-      .INDEX = INDEX[.subset]
-    }
-    
-    .dist <- rdist.earth(point, sites)
-    .ind <- findn_small(.dist, nstation.max)
-
-    valid = which(.dist[.ind] <= cdd)
-    if (length(valid) < nstation.min) return(NULL)
-    
-    ind = .ind[valid]
-    dist = .dist[ind]
-    
-    coef <- (exp((-dist) / cdd))**m # Xavier 2016, Eq. 7
-    theta <- .bearing(c(lon, lat), sites[ind, ]) %>% deg2rad()
-    theta[dist <= 0.01] = 0 # site just on the grid
-
-    alpha <- sapply(seq_along(dist), function(k) {
-      diffTheta <- theta[-k] - theta[k]
-      sum(coef[-k] * (1 - cos(diffTheta))) / sum(coef[-k]) # Xavier 2016, Eq 8
-    })
-    w = coef * (1 + alpha) 
-    # W = W/sum(W)
-    # pred <- sum(W * z[ind]) / sum(W)
-    # data.frame(lon, lat, value = pred)
-    data.table(lon, lat, I = .INDEX[ind], dist = dist, angle = rad2deg(theta), w)
-  }, .progress = .progress, ...) %>% set_names(iterators)
-}
-
-#' @importFrom sf st_as_sf st_buffer st_coordinates st_distance st_geometry
-#' @importFrom stats na.omit
-#' @importFrom data.table data.table
-#' 
-#' @rdname spInterp_adw
-#' @export
-weight_adw_sf <- function(points, range = NULL, res = 0.25, 
-  cdd = 450, m = 4, nstation.max = 8, nstation.min = 3, 
-  .progress = "none", ...) 
-{
-  if (is.null(range)) range = c(min(points$lon), max(points$lon), min(points$lat), max(points$lat))
-  
-  coord <- make_grid(range, res)
-  grid <- cbind(st_as_sf(coord, coords = c("lon", "lat"), crs = 4326), coord)
-  ngrid = nrow(grid)
-
-  sf_points <- points %>% cbind(I = 1:nrow(.), .) %>% 
-    st_as_sf(coords = c("lon", "lat"), crs = 4326) # add a Id column
-
-  iterators = (1:ngrid) %>% set_names(., .)
-  plyr::llply(iterators, function(i) {
-    loc_i <- grid[i, ]
-    lon <- loc_i$lon
-    lat <- loc_i$lat
-    
-    circle <- st_buffer(loc_i, dist = units::set_units(cdd, "km")) %>% st_geometry()
-
-    dx <- sf_points[circle, ]
-    dx$dist <- as.numeric(st_distance(loc_i, dx) / 1e3) # to km
-    dx %<>% subset(dist <= cdd)
-
-    npts <- nrow(dx)
-    
-    if(npts >= 3) {
-      n <- min(nstation.max, npts) # selected
-      ind = findn_small(dx$dist, n)
-      dx = dx[ind, ]
-      # if (npts > nstation.max) dx <- dx[order(dx$dist), ] %>% head(n)
-      coef  <- exp(-dx$dist / cdd)^m # Xavier 2016, Eq 7
-      theta <- .bearing(c(lon, lat), st_coordinates(dx)) %>% deg2rad()
-      
-      alpha <- sapply(seq_len(n), function(k) {
-        diffTheta <- theta[-k] - theta[k]
-        sum(coef[-k] * (1 - cos(diffTheta))) / sum(coef[-k]) # Xavier 2016, Eq 8
-      })
-      w <- coef * (1 + alpha)
-      # w = w / sum(w)
-      data.table(lon = lon, lat = lat, I = dx$I, dist = dx$dist, angle = rad2deg(theta), w) 
-      # data.frame(lon = lon, lat = lat, site = dx$site, wt = w)
-    }
-  }, .progress = .progress, ...) %>% set_names(iterators)
-}
-
-
 #' @param dat matrix `[npoint, ntime]`
 #' @importFrom data.table merge.data.table setkeyv
 #' 
 #' @rdname spInterp_adw
 #' @export
 spInterp_adw <- function(points, dat, range, res = 1, 
-  fun.weight = c("weight_adw", "weight_adw_sf"), ...) 
+  fun.weight = c("cal_weight", "cal_weight_sf"), 
+  wFUN = c("wFUN_adw", "wFUN_idw"), 
+  ...) 
 {
+  fun.weight = match.arg(fun.weight) %>% get()
+  wFUN = match.arg(wFUN) #%>% get()
+
   if (!is.matrix(dat)) dat %<>% as.matrix()
   if (nrow(points) != nrow(dat)) stop("Length of points and dat should be equal!")
 
-  fun.weight = match.arg(fun.weight) %>% get()
-  l = fun.weight(points, range, res, ...)
+  l = fun.weight(points, range, res, wFUN = wFUN, ...)
   weight = do.call(rbind, l)
   grid = weight[, .(lon, lat)] %>% unique() %>% setkeyv(c("lon", "lat"))
   

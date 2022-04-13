@@ -88,13 +88,8 @@ spInterp_bilinear <- function (z, grid = NULL,
             v10 * ex * (1 - ey) + 
             v01 * (1 - ex) * ey + 
             v11 * ex * ey
-
     # if (matY.descend) vals <- vals[I_fix, ]
     if (!convertTo2d) { vals <- `dim<-`(vals, c(length(xx), length(yy), nz)) }
-    # structure(list(grid.origin = grid.origin, 
-    #         grid = grid, 
-    #         data = vals),
-    #     class = "raster2")
     vals
 }
 
