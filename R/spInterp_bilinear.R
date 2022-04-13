@@ -1,53 +1,49 @@
 #' Bilinear interpolation for 3d array
 #' 
-#' @param grid A list object with lon`, `lat` and `loc`.
+#' @inheritParams cal_weight
+#' @param z 3d array (lon, lat, time), with the dimension of 
+#' `[nlon, nlat, ntime]`. `image(z[,,1])` should look normal.
+#' @param dims A list object with `lon` and `lat`.
 #' - `lon`: numeric, `[nlon]`
-#' - `lat`: numeric, `[nlon]`
-#' 
-#' @param grid_target A list object with `lon`, `lat` and `loc`.
-#' - `lon`: numeric, `[nlon]`
-#' - `lat`: numeric, `[nlon]`
-#' - `loc`: a data.frame with the column of c("x", "y"), with the row length of
-#' `nlon*nlat`.
-#' 
-#' @param z 3d array (lon, lat, time), with the dimension of `[nlon, nlat,
-#' ntime]`. `image(z[,,1])` should look normal.
-#' 
+#' - `lat`: numeric, `[nlat]`
 #' @param na.rm If true, Na value in margin will be fixed.
-#' 
-#' @rdname spInterp_bilinear
+#' @param convertTo2d boolean (default false), 
+#' - `FALSE`: a 3d array will be returned, `[nlon, nlat, ntime]`
+#' - `TRUE`: a 2d array will be returned, `[nlon*nlat, ntime]`
 #' 
 #' @note High resolution interpolating to low resolution will lead to unreliable
 #' result, if `cellsize.new/cellsize.origin > 2`.
 #' 
-#' @example R/examples/ex-raster2.R
+#' @example R/examples/ex-bilinear.R
 #' @importFrom abind abind 
 #' @export 
-spInterp_bilinear <- function (z, grid = NULL, 
-    grid_target, 
-    # range = c(70, 140, 15, 55), 
-    # cellsize_x = 1, cellsize_y = cellsize_x, 
+spInterp_bilinear <- function(
+    z, dims = NULL, 
+    range = c(70, 140, 15, 55), res = 1, 
     na.rm = TRUE, 
     convertTo2d = FALSE) 
 {
-    x = grid$lon
-    y = grid$lat
-    # z <- obj.value # 3d array
+    x = dims$lon
+    y = dims$lat
     nx <- length(x)
     ny <- length(y)
     
     ndim <- length(dim(z))
-    nz   <- ifelse(ndim <= 1, 1, last(dim(z)))
 
+    nz = 1
     if (ndim >= 3) {
+        nz = last(dim(z))
         z %<>% set_dim(c(nx * ny, nz))
-    }
-    
+    } else if (ndim == 2) {
+        z %<>% set_dim(c(nx * ny, 1))
+    } 
+
+    grid_target <- make_dims(range, res)
+    loc <- grid_target$coord[, .(lon, lat)] %>% set_names(c("x", "y"))
     xx = grid_target$lon
     yy = grid_target$lat
     nxx <- length(xx)
     nyy <- length(yy)
-    loc <- grid_target$loc %>% set_names(c("x", "y"))
 
     lx  <- approx(x, 1:nx, loc$x, rule = 2)$y
     ly  <- approx(y, 1:ny, loc$y, rule = 2)$y
@@ -72,7 +68,7 @@ spInterp_bilinear <- function (z, grid = NULL,
 
     if (na.rm == TRUE) {
         vv    <- abind(v00, v01, v10, v11, along = 3)
-        vmean <- apply_3d(vv, 3,matrixStats::rowMeans2)
+        vmean <- apply_3d(vv, 3, matrixStats::rowMeans2)
 
         I_good <- rowSums(is.na(vmean)) != ncol(vv) # if all na, no need to interp
         # 859 NA values, 
@@ -89,7 +85,10 @@ spInterp_bilinear <- function (z, grid = NULL,
             v01 * (1 - ex) * ey + 
             v11 * ex * ey
     # if (matY.descend) vals <- vals[I_fix, ]
-    if (!convertTo2d) { vals <- `dim<-`(vals, c(length(xx), length(yy), nz)) }
+    if (!convertTo2d) {
+        dims_new = c(length(xx), length(yy), nz)
+        vals %<>% set_dim(dims_new)
+    }
     vals
 }
 
@@ -178,6 +177,3 @@ fix_na_each <- function(value, new){
 # loc <- meshgrid(x = 70:140, y = 15:55) %>% set_names(c("x", "y"))
 # grid.list <- list(x = 70:140, y = 15:55)
 # y <- interp.surface.grid3d(obj, grid.list)$z
-
-# image(y)
-# r <- raster(y$z, 70, 140, 15, 55)

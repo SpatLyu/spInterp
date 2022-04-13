@@ -1,5 +1,6 @@
 #' @keywords internal
 #' @import magrittr
+#' @importFrom stats approx weighted.mean
 "_PACKAGE"
 
 ## usethis namespace: start
@@ -7,5 +8,11 @@
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  requireNamespace("magrittr")
+  if (getRversion() >= "2.15.1") {
+    utils::globalVariables(
+      c(
+        ".", "lon", "lat", "w"
+      )
+    )
+  }
 }

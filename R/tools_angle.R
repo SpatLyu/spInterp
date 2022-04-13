@@ -10,12 +10,6 @@ check_matrix <- function(x) {
   }
 }
 
-#' cal_azimuth
-#' @export
-cal_azimuth <- function(x) {
-  ab_angle(c(0, 1), x)
-}
-
 #' @export
 #' @rdname cal_azimuth
 ab_angle <- function(a, b) {
@@ -27,26 +21,36 @@ ab_angle <- function(a, b) {
   lb = sqrt(b[, 1]^2 + b[, 2]^2)
   ans = sign(b[, 1] - a[, 1])*acos(dot / (la * lb))
   # 右侧为正
-  setNames(ans, NULL)
+  set_names(ans, NULL)
   # rad2deg(ans) 
 }
 
 #' @export
 angle = ab_angle
 
+#' cal_azimuth
+#' @export
+cal_azimuth <- function(x) {
+  ab_angle(c(0, 1), x)
+}
+
+#!deprecated
 # #' @export 
 # angle <- function(from, to){
 #   from %<>% check_matrix()
 #   to %<>% check_matrix()
-  
+# 
 #   dot.prods <- from[, 1] * to[, 1] + from[, 2]*to[, 2]
 #   # the relative angle of two points
 #   central = matrix(0, ncol = 2)
 #   norms.x <- distance(from = central, to = from)
 #   norms.y <- distance(from = central, to = to)
-#   thetas <- acos((dot.prods / (norms.x * norms.y)))
-  
+#   thetas <- acos((dot.prods / (norms.x * norms.y)))  
 #   as.numeric(thetas)
+# }
+# #' @export 
+# distance <- function(from, to) {
+#   sqrt((abs(from[, 1] - to[, 1])^2) + (abs(from[, 2] - to[, 2])^2))
 # }
 
 #' @export 
@@ -55,11 +59,14 @@ deg2rad <- function(x) x * pi / 180
 #' @export 
 rad2deg <- function(x) x * 180 /pi 
 
-#' @export 
-distance <- function(from, to) {
-  sqrt((abs(from[, 1] - to[, 1])^2) + (abs(from[, 2] - to[, 2])^2))
-}
 
+# `fields` is a package for analysis of spatial data written for
+# the R software environment.
+# Copyright (C) 2021 Colorado School of Mines
+# 1500 Illinois St., Golden, CO 80401
+# Contact: Douglas Nychka,  douglasnychka@gmail.edu,
+# Licence GPL v2
+# https://github.com/cran/fields/blob/master/R/rdist.earth.R
 #' @export
 rdist.earth <- function (x1, x2 = NULL, miles = FALSE, R = NULL) {
   if (is.null(R)) R  = ifelse(miles, 3963.34, 6378.388)
@@ -90,24 +97,10 @@ rdist.earth <- function (x1, x2 = NULL, miles = FALSE, R = NULL) {
   }
 }
 
-# cal_hw <- function(point, dist = 450) {
-#   funx = function(dx) {
-#     p2 = point + c(dx, 0)
-#     # p2[, 1] %<>% pmin(180)
-#     dist2 = rdist.earth(point, p2)
-#     abs(dist2 - dist)
-#   }
-#   funy = function(dy) {
-#     p2 = point + c(0, dy)
-#     # p2[, 2] %<>% pmin(90)
-#     dist2 = rdist.earth(point, p2)
-#     abs(dist2 - dist)
-#   }
-#   dx = optimize(funx, c(0.001, 90))$minimum
-#   dy = optimize(funy, c(0.001, 90))$minimum  
-#   c(dx = dx, dy = dy)
-# }
-
+# Author: Robert J. Hijmans
+# Date :  March 2010 / May 2015
+# Version 2.0
+# Licence GPL v3
 # https://github.com/rspatial/geosphere/blob/master/R/bearing.R
 .bearing <- function(p1, p2) {
   toRad <- pi / 180
@@ -139,3 +132,21 @@ rdist.earth <- function (x1, x2 = NULL, miles = FALSE, R = NULL) {
 
 # #' @importFrom geosphere bearing
 # .bearing <- geosphere::bearing
+
+# cal_hw <- function(point, dist = 450) {
+#   funx = function(dx) {
+#     p2 = point + c(dx, 0)
+#     # p2[, 1] %<>% pmin(180)
+#     dist2 = rdist.earth(point, p2)
+#     abs(dist2 - dist)
+#   }
+#   funy = function(dy) {
+#     p2 = point + c(0, dy)
+#     # p2[, 2] %<>% pmin(90)
+#     dist2 = rdist.earth(point, p2)
+#     abs(dist2 - dist)
+#   }
+#   dx = optimize(funx, c(0.001, 90))$minimum
+#   dy = optimize(funy, c(0.001, 90))$minimum  
+#   c(dx = dx, dy = dy)
+# }

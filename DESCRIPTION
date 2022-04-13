@@ -16,7 +16,7 @@ Imports:
     data.table, 
     plyr, matrixStats,
 Suggests: 
-    ggplot2,
+    ggplot2, dplyr,
     geosphere, 
     units,
     testthat (>= 3.0.0)

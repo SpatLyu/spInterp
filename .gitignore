@@ -12,3 +12,7 @@ R/examples/test*
 
 # Figures
 *.pdf
+*.png
+
+*/temp/*
+*/*/temp/*

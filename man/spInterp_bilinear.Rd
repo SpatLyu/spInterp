@@ -6,30 +6,34 @@
 \usage{
 spInterp_bilinear(
   z,
-  grid = NULL,
-  grid_target,
+  dims = NULL,
+  range = c(70, 140, 15, 55),
+  res = 1,
   na.rm = TRUE,
   convertTo2d = FALSE
 )
 }
 \arguments{
-\item{z}{3d array (lon, lat, time), with the dimension of \verb{[nlon, nlat, ntime]}. \code{image(z[,,1])} should look normal.}
+\item{z}{3d array (lon, lat, time), with the dimension of
+\verb{[nlon, nlat, ntime]}. \code{image(z[,,1])} should look normal.}
 
-\item{grid}{A list object with lon\verb{, }lat\code{and}loc`.
+\item{dims}{A list object with \code{lon} and \code{lat}.
 \itemize{
 \item \code{lon}: numeric, \verb{[nlon]}
-\item \code{lat}: numeric, \verb{[nlon]}
+\item \code{lat}: numeric, \verb{[nlat]}
 }}
 
-\item{grid_target}{A list object with \code{lon}, \code{lat} and \code{loc}.
-\itemize{
-\item \code{lon}: numeric, \verb{[nlon]}
-\item \code{lat}: numeric, \verb{[nlon]}
-\item \code{loc}: a data.frame with the column of c("x", "y"), with the row length of
-\code{nlon*nlat}.
-}}
+\item{range}{\verb{[xmin, xmax, ymin, ymax]}}
+
+\item{res}{the grid resolution (degree)}
 
 \item{na.rm}{If true, Na value in margin will be fixed.}
+
+\item{convertTo2d}{boolean (default false),
+\itemize{
+\item \code{FALSE}: a 3d array will be returned, \verb{[nlon, nlat, ntime]}
+\item \code{TRUE}: a 2d array will be returned, \verb{[nlon*nlat, ntime]}
+}}
 }
 \description{
 Bilinear interpolation for 3d array
@@ -39,32 +43,43 @@ High resolution interpolating to low resolution will lead to unreliable
 result, if \code{cellsize.new/cellsize.origin > 2}.
 }
 \examples{
-\dontrun{
-library(CMIP6tools)
-# library(rgdal)
-# library(sp2)
-library(maptools)
+set.seed(1)
+## first example: simulated data
+range = c(70, 140, 15, 55)
+dims = make_dims(range, res = 2)
 
-# polyline
-read_polyline <- function(file, lwd = 0.5, ...){
-    suppressWarnings(shp <- readShapeLines(file))
-    proj4string(shp) <- prj84
-    list("sp.lines", shp, first = FALSE, lwd = lwd, ...) # china poly    
+nlat  <- length(dims$lat)
+nlon <- length(dims$lon)
+ntime <- 10
+
+z <- array(rnorm(nlon*nlat*ntime), c(nlon, nlat, ntime))
+z_bl  <- spInterp_bilinear(z, dims, range, res = 1)
+par(mfrow = c(1, 2), mar = c(1, 1, 1, 1))
+image(z[,,1])
+image(z_bl[,,1])
+
+## second example: real data
+# f = system.file("inst/extdata/PMLV2_veg-dynamic_GPP_2014.tif", package = "spInterp")
+# PMLV2_2014_gpp = terra::rast(f) \%>\% sf2::rast_array()
+arr = PMLV2_2014_gpp
+interp_PML <- function(arr, res = 2, plot = FALSE) {
+  range = c(-180, 180, -60, 90)
+  dims = make_dims(range, res = 1)
+  arr_bl  <- spInterp_bilinear(arr, dims, range, res = res)
+    
+  if (plot) {
+    par(mfrow = c(2, 1), mar = c(0, 0, 0, 0))
+    image(arr[,,1])
+    image(arr_bl[,,1])
+  }
+  arr_bl
 }
-# sp_arc_world <- read_polyline("G:/ArcGIS/continent.shp") # sp_arc_world
-# sp_arc_CH <- read_polyline(system.file("extdata/shp", "bou1_4l_sml.shp", package = "CMIP5tools"))
 
-range <- c(70, 140, 15, 55)
-# MAIN SCRIPTS ------------------------------------------------------------
-x <- readRDS(system.file("extdata", "tasmax_Threshold_ACCESS1-0.RDS", package = "CMIP5tools"))
+arr_deg2_v0 = interp_PML(arr, res = 2, plot = TRUE)
+arr_deg2_v1 = interp_PML(arr[,,1], res = 2)
+all.equal(arr_deg2_v0, arr_deg2_v1)
 
-class(x) <- "raster2"
-plot(x)
-
-x_interp <- spInterp_bilinear(x$grid, x$TRS, range, cellsize_x = 1.5) 
-x_clip <- clip_raster2(x, range)
-
-plot(x_interp)
-plot(x_clip) # , sp.layout = sp_arc_CH
-}
+arr_deg05 = interp_PML(arr, res = 0.5, plot = TRUE)
+# Ipaper::write_fig({ tmp = interp_PML(arr, res = 0.5, TRUE)}, "bilinear_gpp.png", 8, 6)
+# Ipaper::write_fig({ tmp = interp_PML(arr, res = 2, TRUE)}, "bilinear_gpp.png", 8, 6)
 }
