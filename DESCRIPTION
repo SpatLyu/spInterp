@@ -11,10 +11,10 @@ Depends:
     R (>= 3.5)
 Imports: 
     abind,
-    sf,
+    terra, sf,
     magrittr,
     data.table, 
-    dplyr,
+    dplyr, purrr, 
     plyr, matrixStats,
     hydroGOF,
     stringr, glue

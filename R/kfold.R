@@ -43,6 +43,7 @@ kford_calib <- function(index, X, Y, FUN = xgboost, ...) {
 }
 
 
+#' @importFrom purrr map
 #' @export
 kford_tidy <- function(res, ind_lst, Y) {
   kfold_names <- names(ind_lst)

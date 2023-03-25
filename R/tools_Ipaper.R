@@ -146,3 +146,7 @@ writeLines_list <- function(l, f) {
 dt_round <- function (d, digits = 2) {
   mutate(d, across(where(is.double), ~round(.x, digits)))
 }
+
+is_empty <- function (x) {
+  is.null(x) || (is.data.frame(x) && nrow(x) == 0) || length(x) == 0
+}
