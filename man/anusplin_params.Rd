@@ -156,7 +156,13 @@ integer.}
 \item \code{3}: user supplied Idrisi image with the same size as the grid being calculated
 }}
 
-\item{type.grd}{Same as \code{type.mask}, but for interpolated grid.}
+\item{type.grd}{Mode of f output surface value grids, possible values are:
+\itemize{
+\item \code{0}: grid written in X,Y,Z format
+\item \code{1}: generic grid written by rows
+\item \code{2}: Arc/Info grid
+\item \code{3}: Idrisi image
+}}
 
 \item{err.cov}{test}
 
@@ -182,13 +188,14 @@ a list with three components:
 Format the input data and generate the configuration file required for ANUSPLIN interpolation.
 }
 \examples{
-data(TempBrazil)
-colnames(TempBrazil) <- c("lon", "lat", "temp")
-df = TempBrazil
+# data(TempBrazil)
+# colnames(TempBrazil) <- c("lon", "lat", "temp")
+# df = TempBrazil
 
-# range <- c(70, 140, 15, 55)
-range <- c(-78, -34, -36, 5)
-p = anusplin_params(df, "TempBrazil", "dem.txt", range, alt = NULL)
-str(p)
-
+# # range <- c(70, 140, 15, 55)
+# range <- c(-78, -34, -36, 5)
+# p = anusplin_params(df, "TempBrazil", "dem.txt", range, alt = NULL)
+# str(p)
+# library(data.table)
+# library(magrittr)
 }

@@ -1,28 +1,15 @@
 ```{r}
-data(TempBrazil)
-colnames(TempBrazil) <- c("lon", "lat", "temp")
-df <- TempBrazil
-
-# range <- c(70, 140, 15, 55)
-range <- c(-78, -34, -36, 5)
-p = anusplin_params(df, "TempBrazil", "dem.txt", range, alt = NULL)
-str(p)
-
-```
-
-
-```{r}
 library(Ipaper)
+library(tidymet)
+library(ggplot2)
 
-df = fread("inst/extdata/anusplin_demo/RH_01-01.dat") %>%
-  set_names(c("site","lon", "lat", "alt", "RH"))
+data <- fread("inst/anusplin_demo/RH_01-01.dat") %>%
+  `colnames<-`(c("site", "lon", "lat", "alt", "RH"))
+inds <- match2(st840$site, dat$site)$I_y
+dat <- data[inds, ]
 
-f_dem = "inst/extdata/anusplin_demo/china_dem_025deg.txt"
-range <- c(70, 140, 15, 55)
-# range <- c(-78, -34, -36, 5)
-p = anusplin_params(df, "ChinaHI", f_dem, range, res = 1, 
-  alt = "cov")
-# alt: 协变量
-str(p)
+range <- c(69.625, 140.375, 14.625, 55.375)
+params <- anusplin_params(dat, "RH", range, "inst/anusplin_demo/china_dem_025deg.txt")
+anusplin_write("R/examples/anusplin_output", params, is.run = T)
 
 ```

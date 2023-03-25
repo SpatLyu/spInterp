@@ -5,10 +5,10 @@
 \title{ANUSPLIN writer}
 \usage{
 anusplin_write(
-  dat,
-  opt_splina,
-  opt_lapgrd,
   outdir,
+  dat,
+  opt_splina = NULL,
+  opt_lapgrd = NULL,
   na.width = "auto",
   names = c("splina.txt", "lapgrd.txt"),
   is.run = FALSE,
@@ -16,22 +16,21 @@ anusplin_write(
 )
 }
 \arguments{
-\item{dat}{A formatted data.frame (data.table).}
-
-\item{opt_splina}{A vector of splina parameters.}
-
-\item{opt_lapgrd}{A vector of lapgrd parameters.}
-
 \item{outdir}{The output directory.}
+
+\item{dat}{A formatted data.frame (data.table), or a list contains \code{dat},
+\code{opt_splina} and \code{opt_lapgrd}}
+
+\item{opt_splina}{A list of splina parameters.}
+
+\item{opt_lapgrd}{A list of lapgrd parameters.}
 
 \item{na.width}{The length of the whitespace to fill in the missing value,
 automatic calculation (\strong{default}) or manual setting an integer.}
 
 \item{names}{Filenames of splina and lapgrd paramters, no path required.}
 
-\item{exe}{Path to splina and lapgrd exe.}
-
-\item{cmd}{The filename of batch execution script, or no export (\strong{default}).}
+\item{is.run}{If \code{TRUE}, run the command.}
 }
 \description{
 Write the formatted data, splina and lapgrd configuration files to the same
