@@ -1,0 +1,107 @@
+```{r}
+# library(doFuture)
+# registerDoFuture()
+library(fields)
+library(data.table)
+library(Ipaper)
+library(glue)
+library(spInterp)
+library(plyr)
+library(stringr)
+library(Ipaper)
+library(raster)
+library(purrr)
+library(hydroGOF)
+library(caret)
+
+metric <- function(sim, obs) {
+  m <- c(sd = sd(sim, na.rm = T),
+      cv = sd(sim, na.rm = T) / mean(sim, na.rm = T)) %>% as.matrix()
+  gof(sim, obs) %>% rbind(m, .)
+}
+
+calc <- function(set, anu) {
+  tps <- set$tps
+  grd <- set$test
+  res <- predict(tps, grd[, 1:2], Z = grd$alt) %>% c %>% metric(grd$value)
+  
+  merge(grd, anu, sort = F, by.x = c('lon', 'lat'), by.y = c('V1', 'V2')) %>%
+    {
+      metric(.$V3, .$value)
+    } %>% cbind(res) %>% `colnames<-`(c('anusplin', 'fields')) %>%
+    .[1:6,] %>% round(3)
+}
+
+run <- function(i) {
+  dir <- gsub('/', '\\\\', dirname(i))
+  cmd <- glue("pushd {dir} && {basename(i)}")
+  shell(cmd)
+}
+
+dem <- raster("data-raw/china_dem_00625deg.tif")
+```
+
+```{r}
+# plan(multisession, workers = 3)
+# res <- foreach(var = c('RH', 'Tair_avg', 'Tair_max')) %do% {
+var = "RH"
+ext <- str_extract(var, '[a-zA-Z]+(?![a-z])')
+names <- if (var == 'RH') {
+  c('site', 'lon', 'lat', 'alt', var)
+} else {
+  c('site', 'lon', 'lat', 'alt', 'Tair_avg', 'Tair_max')
+}
+
+dat <- fread(glue("data-raw/{ext}_01-01.dat")) %>%
+  set_names(names) %>% .[, c('site', 'lon', 'lat', 'alt', ..var)]
+
+set.seed(2023)
+kf <- createFolds(1:nrow(dat), k = 5, returnTrain = T)
+
+tps_model <- foreach(ind_train = kf, i = 1:length(kf)) %do% {
+  ind_test <- setdiff(1:nrow(dat), ind_train)
+  train_set <- dat[ind_train]
+  test_set <- dat[ind_test]
+  test_set[, 2:3] <- test_set[, lapply(.SD, round_any, 0.25), .SDcols = 2:3]
+  
+  path <- glue('test/anusplin/{var}/test_{i}')
+  unlink(path, recursive = T)
+  mkdir(path)
+  
+  range <- c(test_set$lon %>% range, test_set$lat %>% range) %>%
+    round_any(0.25)
+  range[c(1, 3)] %<>% `-`(0.25 + 0.125)
+  range[c(2, 4)] %<>% `+`(0.25 + 0.125)
+  
+  file_dem <- glue('{getwd()}/{path}/dem.asc')
+  r <- raster(
+    xmn = range[1], xmx = range[2],
+    ymn = range[3], ymx = range[4], resolution = 0.25) %>% resample(dem, .)
+  
+  test_set <- as.data.frame(r, xy = T) %>% 
+    set_names(c('lon', 'lat', 'alt')) %>% 
+    merge(test_set[, !'alt'], .)
+  
+  writeRaster(r, file_dem, overwrite = T)
+  pars <- anusplin_params(train_set, glue('test_{i}'), 
+    range, file_dem, width = 8, order = 2)
+  
+  anusplin_write(pars$data, pars$splina, pars$lapgrd,
+    path, cmd = glue('test_{i}.cmd'))
+  
+  list(tps = Tps(train_set[, 2:3], train_set[, ..var], Z = train_set$alt),
+        test = test_set[, c(1, 2, 5, 4)])
+}
+
+# run anusplin
+path <- paste('tests/anusplin', var, sep = '/')
+files <- dir(path, pattern = 'cmd$', recursive = T, full.names = T)
+l_ply(files, run, .progress = 'text')
+
+files <- dir(path,
+      pattern = glue('^[A-Z].*grd$'), recursive = T, full.names = T)
+anus <- map(files, fread)
+
+map2(tps_model, anus, calc)
+# saveRDS(res, 'test/res.rds')
+```

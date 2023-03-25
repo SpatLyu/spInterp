@@ -21,8 +21,6 @@ backup
 inst/doc
 
 # suppress anusplin
-*anusplin*
-exec
-*.dat
-scripts
-*.tif
+output
+backup
+*.exe

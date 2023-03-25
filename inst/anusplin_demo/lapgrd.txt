@@ -1,0 +1,24 @@
+output\RH_01-01.sur
+0
+1
+output\RH_01-01.cov
+2
+
+1
+1
+69.625 140.375 0.25
+2
+14.625 55.375 0.25
+0
+2
+china_dem_025deg.txt
+0
+-9999.0
+output\RH_01-01.grd
+(3f8.2)
+0
+-9999.0
+output\cov_RH_01-01.grd
+(3f8.2)
+
+

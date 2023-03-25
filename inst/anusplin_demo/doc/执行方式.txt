@@ -1,0 +1,5 @@
+splina<splina.txt>splina.log
+lapgrd<lapgrd.txt>lapgrd.log
+
+先执行splina，再执行lapgrd。执行方法如上
+也可以直接写成cmd执行，例如run_01-01.cmd
