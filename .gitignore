@@ -23,4 +23,6 @@ inst/doc
 # suppress anusplin
 output
 backup
-*.exe
+# *.exe
+data-raw/shp
+*.html

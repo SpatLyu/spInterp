@@ -13,7 +13,8 @@ spInterp(
   fun.weight = c("cal_weight", "cal_weight_sf"),
   wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
   .parallel = FALSE,
-  ...
+  ...,
+  weight = NULL
 )
 
 spInterp_adw(
@@ -40,6 +41,9 @@ spInterp_adw(
 \item{wFUN}{\verb{wFUN_*} functions, see \code{\link[=wFUN]{wFUN()}} for details}
 
 \item{...}{other parameters to \link[plyr:ldply]{plyr::ldply}}
+
+\item{weight}{predefined weight to speed-up calculation, which is returned
+by \code{\link[=spInterp]{spInterp()}} itself.}
 }
 \description{
 The irregularly-spaced data are interpolated onto regular latitude-longitude

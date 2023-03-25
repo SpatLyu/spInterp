@@ -6,10 +6,6 @@
 #' lat must be included, site and alt are optional, the others are variable names.
 #' @param basename Basename for all output files, extensions should not be included.
 #' @param range Range of interpolation grid (xmin, xmax, ymin, ymax).
-#'
-#' @param file.alt When `type.alt` is not 0, this is the input grid file name; otherwise
-#' a manual constant.
-#'
 #' @param res The grid resolution (degree).
 #' 
 #' @param unit The unit of `dat`, a non-negative integer, possible values are:
@@ -24,11 +20,6 @@
 #' - `8`: megajoules
 #'
 #' @param width The fixed width of numbers in formatted data.
-#'
-#' @param alt Type of elevation was treated, possible values are:
-#' - `NULL` : no use of elevation
-#' - `cov`  : considered as independent covariates (**default**)
-#' - `spl`  : considered as independent spline variables
 #'
 #' @param lim.lon A vector containing lower and upper limits, `auto` (default)
 #' meant to use the minimum and maximum values in the data, or set manually.
@@ -82,43 +73,43 @@
 #' - `3`: fixed signal - supply value
 #' - `4`: minimise GML
 #'
-#' @param type.mask Mode of mask grid, a non-negative integer, possible values are:
-#' - `0`: mask grid not supplied (**default**)
-#' - `1`: generic mask grid
-#' - `2`: Arc/Info mask grid
-#' - `3`: Idrisi mask grid
-#'
+#' @param type.mask type of `file.mask`, one of c("none", "generic_grid", 
+#' "arcinfo_grid", "idrisi_img")`, default `arcinfo_grid`.
 #' @param file.mask Filename of mask grid, only valid if `type.mask` set to positive
 #' integer.
-#'
-#' @param type.alt Mode of the independent variable, possible values are:
-#' - `0`: user supplied constant
-#' - `1`: user supplied grid in generic row format with the same size as the grid being calculated
-#' - `2`: user supplied Arc/Info grid with same size as the grid being calculated (**default**)
-#' - `3`: user supplied Idrisi image with the same size as the grid being calculated
-#'
-#' @param type.grd Mode of f output surface value grids, possible values are:
-#' - `0`: grid written in X,Y,Z format
-#' - `1`: generic grid written by rows
-#' - `2`: Arc/Info grid
-#' - `3`: Idrisi image
+#' 
+#' @param type.alt type of grid, one of `c("const", "generic_grid", "arcinfo_grid", "idrisi_img")`, 
+#' default `arcinfo_grid`
+#' 
+#' @param file.alt file path of alt
+#' - `type.alt != "none"`: file.alt is file path
+#' - `type.alt == "none"`: file.alt is a const real number
+#' 
+#' #' @param alt Type of elevation was treated, possible values are:
+#' - `cov`  : considered as independent covariates (**default**)
+#' - `spl`  : considered as independent spline variables
+#' 
+#' @param type.grd type of grid, one of `c("xyz", "generic_grid", "arcinfo_grid", "idrisi_img")`, 
+#' default `arcinfo_grid`
 #' 
 #' @param missing Filling of missing values.
 #' @param err.cov test
-#'
+#' 
 #' @param grid.pos Grid position option, a non-negative integer, possible values are:
 #' - `0`: grid points at cell corners (**default**)
 #' - `1`: grid points at cell centres
-#'
+#' 
 #' @param essential If `True`, only export essential process files, large residual
 #' file, optimisation parameters file, data list file and validation data file are
 #' ignored.
-#'
+#' 
+#' @inheritSection query_grid_type grid_type
+#' 
 #' @return a list with three components:
 #' - `data`   : formatted data.table of `dat`
 #' - `splina` : a vector containing splina parameters
 #' - `lapgrd` : a vector containing lapgrd parameters
-#'
+#' 
 #' @importFrom glue glue
 #' @importFrom stringr str_extract
 #' @importFrom magrittr %>% %<>%
@@ -128,158 +119,128 @@
 #'
 #' @example R/examples/ex-anusplin.R
 #' @export
-anusplin_params <- function(
-    dat, basename, file.alt = NULL,
-    range, res = 0.25,
-    unit = 0,
-    width = 7, missing = -9999,
-    alt = "cov",
-    lim.lon = "auto", lim.lat = "auto", lim.alt = "auto",
-    cvt.lon = c(0, 1), cvt.lat = c(0, 1), cvt.alt = c(1, 1),
-    cvt.coef = 1000,
-    trans.dep = 0,
-    order = 3,
-    err.wgt = 0,
-    optimize = 1,
-    smooth = 1,
-    type.mask = 0, file.mask = NULL,
-    type.alt = 2,
-    type.grd = 2,
-    err.cov = 2,
-    grid.pos = 1,
-    essential = TRUE) 
+anusplin_make_param <- function(
+  dat, basename, 
+  range, res = 0.25,
+
+  order = 3L,
+  unit = 0L,
+  width = 9, missing = -9999L,
+  file.alt = NULL, 
+
+  alt = c("cov", "spl"),
+  type.alt = "arcinfo_grid",
+  type.grd = "arcinfo_grid",
+  type.mask = "none", file.mask = NULL,
+  
+  # lim.lon = "auto", lim.lat = "auto", 
+  # lim.alt = "auto",
+  cvt.lon = c(0, 1), cvt.lat = c(0, 1), cvt.alt = c(1, 1),
+  cvt.coef = 1000,
+  
+  trans.dep = 0,
+  err.wgt = 0,
+  optimize = 1,
+  smooth = 1,
+  
+  err.cov = 2,
+  grid.pos = 1,
+  essential = TRUE) 
 {
+  type.alt  %<>% query_grid_type()
+  type.grd  %<>% query_grid_type()
+  type.mask %<>% query_grid_type()
+  alt = match.arg(alt)
+
   # check arguments validation
-  if (nchar(missing) > width) {
+  if (nchar(missing) > width) 
     stop("Missing values length should not be more than the width")
+  
+  if (is.null(file.alt)) {
+    type.alt = NULL # const
+  } else {
+    if (!("alt" %in% names(dat))) stop("Please provide `alt` in dat!")
+    if (is.character(file.alt)) file.alt %<>% normalizePath("/")
   }
   
-  if (type.alt != 0) {
-    if (!is.character(file.alt))
-      stop("`file.alt` must be the filename.")
-    file.alt %<>% normalizePath('/')
+  if (is.null(file.alt)) {
+    if ("alt" %in% names(dat)) dat$alt <- NULL
+    cvt.alt <- NULL
+    cvt.coef <- NULL
   } else {
-    if (!is.numeric(file.alt))
-      stop("`file.alt` must be an integer.")
+    r.dem <- rast(file.alt) %>% check_rast_grid(res, range)
+    lim.alt <- c_range(dat$alt, values(r.dem)) %>% {c(floor(.[1]), ceiling(.[2]))}
+    cvt.alt <- paste(c(lim.alt, cvt.alt), collapse = " ")
   }
+  
+  lim.lon = range[1:2]
+  lim.lat = range[3:4]
+  cvt.lon <- paste(c(lim.lon, cvt.lon), collapse = " ")
+  cvt.lat <- paste(c(lim.lat, cvt.lat), collapse = " ")
   
   dat %<>% as.data.table()
   names <- colnames(dat)
-  
-  if (is.null(alt)) {
-    if ("alt" %in% names) {
-      dat$alt <- NULL
-      names <- names[names != "alt"]
-    }
-    cvt.alt <- NULL
-  } else {
-    cvt.alt <- if (lim.alt == "auto") {
-      r.dem <- rast(file.alt)
-      if (!all(res(r.dem) == res, as.vector(ext(r.dem)) == range)) {
-        stop('Dimensions of dem and fitted surface are mismatch.')
-      }
-      
-      range.alt <- dat$alt %>% range
-      range.dem <- values(r.dem) %>% range(na.rm = T)
-      
-      c(
-        min(range.alt[1], range.dem[1]) %>% floor(),
-        max(range.alt[2], range.dem[2]) %>% ceiling()
-      ) %>%
-        c(cvt.alt) %>%
-        paste(collapse = " ")
-    } else {
-      paste(lim.alt, cvt.alt, collapse = " ")
-    }
-  }
-  
+
   # n.sur <- length(names) - 2
   ind.spl <- 2
   ind.cov <- sur.spl <- sur.cov <- 0
   
-  cvt.lon <- if (lim.lon == "auto") {
-    range.lon <- dat$lon %>% range
-    c(min(range[1], range.lon[1]) %>% floor(),
-      max(range[2], range.lon[2]) %>% ceiling()) %>%
-      c(cvt.lon) %>%
-      paste(collapse = " ")
-  } else {
-    paste(lim.lon, cvt.lon, collapse = " ")
-  }
-  
-  cvt.lat <- if (lim.lat == "auto") {
-    range.lat <- dat$lat %>% range
-    c(min(range[3], range.lat[1]) %>% floor(),
-      max(range[4], range.lat[2]) %>% ceiling()) %>%
-      c(cvt.lat) %>%
-      paste(collapse = " ")
-  } else {
-    paste(lim.lat, cvt.lat, collapse = " ")
-  }
-  
   if ("site" %in% names) {
+    # 请不要输入站点编号
+    nchr.site <- nchar(dat$site) %>% max()
     pos.site <- which("site" == names)
-    chr.site <- dat$site %>%
-      nchar() %>%
-      max()
-    fmt.site <- glue("%{chr.site}i")
+    fmt.site <- glue("%{nchr.site}i")
     dat$site %<>% sprintf(fmt = fmt.site)
     # n.sur <- n.sur - 1
   } else {
-    chr.site <- 0
+    nchr.site <- 0
     pos.site <- -1
     fmt.site <- NULL
   }
   
   pos.coord <- match(c('lon', 'lat'), names)
-  if (length(pos.coord) != 2) {
-    stop("Check whether (lon, lat) in colnames of dat")
-  }
-  dat[, pos.coord] <-
-    dat[, lapply(.SD, sprintf, fmt = glue("%{width}.2f")), .SDcols = pos.coord]
+  if (length(pos.coord) != 2) 
+    stop("(lon, lat) should be in the colnames of dat")
   
-  if (!is.null(alt) & "alt" %in% names) {
-    dat$alt %<>% sprintf(fmt = glue("%{width}.1f"))
+  dat %<>% mutate(across(all_of(c("lon", "lat")), ~sprintf(glue("%{width}.2f"), .x)))
+  
+  if (!is.null(file.alt)) {
     # n.sur <- n.sur - 1
+    dat$alt %<>% sprintf(fmt = glue("%{width}.1f"))
     if (alt == "cov") {
-      ind.cov <- ind.cov + 1
+      ind.cov %<>% add(1L)
     } else if (alt == "spl") {
-      ind.spl <- ind.spl + 1
+      ind.spl %<>% add(1L)
     }
   }
   
   pos.var <- which(!names %in% c("site", "lon", "lat", "alt"))
   n.sur <- length(pos.var)
+  # dat[[pos.var]] %<>% map(~sprintf(glue("%{width}.2f"), .x))
   dat[, pos.var] <-
     dat[, lapply(.SD, sprintf, fmt = glue("%{width}.2f")), .SDcols = pos.var]
-  
+
   file.sur <- glue("{basename}.sur")
   file.cov <- glue("{basename}.cov")
   
-  ## outfile lists:
-  # - large residual
-  # - optimisation parameters
-  # - surface coefficients
-  # - data list
-  # - error covariance
   if (essential) {
     output <- c("", "", file.sur, "", file.cov)
   } else {
     output <- c(
-      glue("{basename}.res"),
-      glue("{basename}.opt"),
-      file.sur,
-      glue("{basename}.lis"),
-      file.cov
+      glue("{basename}.res"), # large residual
+      glue("{basename}.opt"), # optimisation parameters
+      file.sur,               # surface coefficients
+      glue("{basename}.lis"), # data list
+      file.cov                # error covariance
     )
   }
   
   rle <- str_extract(dat[1], "(?<=\\.)[0-9]+") %>%
     nchar() %>% rle()
+
   rle$lengths[which(rle$lengths == 1)] <- ""
   rle$values[which(!is.na(rle$value))] %<>% paste0("f", width, ".", .)
-  rle$values[which(is.na(rle$values))] <-
-    glue("a{chr.site}")
+  rle$values[which(is.na(rle$values))] <- glue("a{nchr.site}")
   
   fmt <- paste0(rle[["lengths"]], rle[["values"]]) %>%
     paste(collapse = ",") %>%
@@ -304,55 +265,53 @@ anusplin_params <- function(
     smooth,
     infile = glue("{basename}.dat"),
     nmax = round_any(nrow(dat), 5, f = ceiling),
-    chr.site,
+    nchr.site,
     fmt,
     output,
     "", # validation data fname
     ""  # nmax_valid
-  )
+  ) %>% set_class("param")
   
   lapgrd <- listk(
     file.sur,
-    n.surf = 0,
+    n.surf       = 0,
     type.surfCal = 1,
     file.cov,
     err.cov,
     "",           # Maximum standard errors
     grid.pos,
-    order(pos.coord)[1],
     # Index of first grid variable
-    glue("{range[1]} {range[2]} {res}"),
-    order(pos.coord)[2],
+    pos_lon      = order(pos.coord)[1],
+    range_lon    = glue("{range[1]} {range[2]} {res}"),
     # Index of second grid variable
-    glue("{range[3]} {range[4]} {res}"),
+    pos_lat      = order(pos.coord)[2],
+    range_lat    = glue("{range[3]} {range[4]} {res}"),
     
     # Mode of mask grid
-    ifelse(type.mask, c(type.mask, file.mask), type.mask),
+    file.mask    = ifelse(type.mask, c(type.mask, file.mask), type.mask),
     
-    type.alt,
-    # Mode of the independent variable
-    file.alt,
-    # const, Independent variable grid is set to this constant or alt fname
+    type.alt, # Mode of the independent variable
+    file.alt = file.alt, # const, Independent variable grid is set to this constant or alt fname
     
-    type.grd,
-    missing,                                 # Special value of output grid
-    file.out = glue("{names[pos.var]}.grd"), # oupput grid file name
-    glue("({n.sur + 2}f{width}.2)"),         # Output grid format
+    type.grd     = type.grd,
+    na           = if(is.null(file.alt)) NULL else missing,                     # Special value of output grid
+    fout         = glue("{names[pos.var]}.grd"),    # oupput grid file name
+    fmt          = glue("({n.sur + 2}f{width}.3)"), # Output grid format
     
     # output error
-    type.grd, # Mode of output error grids
-    missing,
-    glue("cov_{names[pos.var]}.grd"),
-    glue("({n.sur + 2}f{width}.2)"),
+    type.err     = type.grd, # Mode of output error grids
+    na_err       = if(is.null(file.alt)) NULL else missing,
+
+    f_err        = glue("cov_{names[pos.var]}.grd"),
+    fmt_err      = glue("({n.sur + 2}f{width}.3)"),
     "",
     ""
-  )
-  listk(data = dat, splina, lapgrd)
+  ) %>% set_class("param")
+  listk(data = dat, splina, lapgrd) %>% set_class(c("anusplin_param"))
 }
 
-
-#' ANUSPLIN writer
-#'
+#' ANUSPLIN write setting
+#' 
 #' Write the formatted data, splina and lapgrd configuration files to the same
 #' directory.
 #'
@@ -374,19 +333,14 @@ anusplin_params <- function(
 #' @importFrom purrr imap reduce
 #' @importFrom tools file_path_sans_ext
 #' @export
-anusplin_write <- function(outdir, 
-                           dat,
-                           opt_splina = NULL,
-                           opt_lapgrd = NULL,
-                           na.width = "auto",
-                           names = c("splina.txt", "lapgrd.txt"),
-                           is.run = FALSE,
-                           ...) {
-  if (inherits(dat, 'list') & length(dat) == 3) {
-    opt_splina <- dat[[2]]
-    opt_lapgrd <- dat[[3]]
-    dat <- dat[[1]]
-  }
+anusplin_write_setting <- function(
+  param, outdir, ..., na.width = "auto", 
+  is.run = FALSE, overwrite = FALSE) 
+{
+  mkdir(outdir)
+  opt_splina <- param$splina
+  opt_lapgrd <- param$lapgrd
+  dat <- param$data
   
   width <- dat[, lapply(.SD, nchar)] %>%
     na.omit() %>% unique() %>% nrow()
@@ -395,65 +349,52 @@ anusplin_write <- function(outdir,
   na.width = guess_na_width(dat, opt_splina, na.width)
   
   file <- opt_splina$infile #[[length(opt_splina) - 10]]
-  write.table(dat, glue("{outdir}/{file}"),
-    sep = "", col.names = F, row.names = F, quote = F,
-    na = strrep(" ", na.width))
-  
-  writeLines_list(opt_splina, glue("{outdir}/{names[1]}"))
-  writeLines_list(opt_lapgrd, glue("{outdir}/{names[2]}"))
+  write.table(data.frame(dat), glue("{outdir}/{file}"),
+              sep = "", col.names = F, row.names = F, quote = F,
+              na = strrep(" ", na.width))
+
+  f_pars = c("param_splina.txt", "param_lapgrd.txt")
+  writeLines_list(opt_splina, glue("{outdir}/{f_pars[1]}"))
+  writeLines_list(opt_lapgrd, glue("{outdir}/{f_pars[2]}"))
   
   app_splina = system.file("exec/splina.exe", package = "spInterp")
   app_lapgrd = system.file("exec/lapgrd.exe", package = "spInterp")
   cmd <- c(
-    glue("{app_splina} < {names[1]} > splina.log"),
-    glue("{app_lapgrd} < {names[2]} > lapgrd.log")
+    # "@echo off",
+    glue("splina.exe < {f_pars[1]} > splina.log"),
+    glue("lapgrd.exe < {f_pars[2]} > lapgrd.log")
+    # glue("{app_splina} < {f_pars[1]} > splina.log"),
+    # glue("{app_lapgrd} < {f_pars[2]} > lapgrd.log")
   )
   f_cmd = glue("{outdir}/run.cmd")
   writeLines(cmd, f_cmd)
   
   if (is.run) {
+    add_path_anusplin()
+    if (overwrite) anusplin_rm_cache(outdir)
     glue("pushd {outdir} && run.cmd") %>% shell(translate = T)
-    
-    # return fitted values
-    f_out <- opt_lapgrd$file.out
-    f_out_full <- paste(outdir, f_out, sep = '/')
-    
-    if (!all(file.exists(f_out_full)))
-      stop('The fitted result is not as expected, check whether the parameters are wrong.')
-    
-    ## can be improved later
-    if (opt_lapgrd$type.grd) {
-      rast(f_out_full) %>% as.data.table(xy = T)
-    } else {
-      map2(f_out_full, file_path_sans_ext(f_out), ~fread(.x, col.names = c('x', 'y', .y))) %>% reduce(merge)
-    }
   }
 }
 
-guess_na_width <- function(dat, opt_splina, na.width = "auto") {
-  if (na.width == "auto") {
-    na.col <- which(sapply(dat, anyNA)) %>% unname()
-    if (length(na.col) > 0) {
-      revid <- opt_splina$fmt %>% {
-        str_match_all(., "([0-9]+)?[a-z]([0-9]+)")[[1]] # (3f7.2) --> 3f7
-      } %>%
-        apply(1, \(x) rep(as.numeric(x[3]), ifelse(is.na(x[2]), 1, as.numeric(x[2])))) %>%
-        unlist()
-      na.width <- revid[na.col] %>% unique()
-      
-      if (length(na.width) != 1) {
-        stop(glue("The widths of columns containing NA must be unique, but widths are {na.width}"))
-      }
-    } else {
-      na.width <- 0
-    }
-  }
-  na.width
+#' @export
+anusplin_rm_cache <- function(outdir = "output") {
+  # pattern = param$splina$basename %>% basename() %>% paste0("^", .)
+  pattern = c("cov", "grd", "sur", "log") %>% # , "dat"
+    paste(".", ., "$", sep = "", collapse = "|")
+  fs = dir(outdir, pattern, full.names = TRUE)
+  file.remove(fs)
 }
 
-# - `Iw`   : 输出整数，w表示输出的字段宽度；
-# - `Fw.d` : 输出实数，w表示输出的字段宽度，d表示小数点后的位数；
-# - `Ew.d` : 按科学计数法输出实数，w表示输出的字段宽度，d表示指数部分的位数；
-# - `A`    : 输出字符型变量；
-# - `Lw`   : 输出逻辑型变量，w表示输出的字段宽度；
-# - `Gw.d` : 输出实数，根据大小选择Fw.d或Ew.d。
+#' @export
+anusplin_read_output <- function(opt_lapgrd, outdir) {
+  # return fitted values
+  f_out <- opt_lapgrd$fout
+  f_out_full <- paste(outdir, f_out, sep = "/")
+
+  if (!all(file.exists(f_out_full))) {
+    stop("The fitted result is not as expected, check whether the parameters are wrong.")
+  }
+
+  ## TODO: can be improved later
+  rast(f_out_full) %>% as.data.frame(xy = T) %>% data.table()
+}

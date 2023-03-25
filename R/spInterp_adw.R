@@ -10,6 +10,8 @@
 #' @param dat matrix, `[npoint, ntime]`, the observed data used to interpolate grid
 #' @param fun.weight function to calculate weight, one of 
 #' `c("cal_weight", "cal_weight_sf")`.
+#' @param weight predefined weight to speed-up calculation, which is returned 
+#' by [spInterp()] itself.
 #' 
 #' @author Dongdong Kong and Heyang Song
 #' @references 
@@ -26,16 +28,19 @@ spInterp <- function(points, dat, range, res = 1,
   fun.weight = c("cal_weight", "cal_weight_sf"), 
   wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"), 
   .parallel = FALSE, 
-  ...) 
+  ..., 
+  weight = NULL) 
 {
-  fun.weight = match.arg(fun.weight) %>% get()
-  wFUN = match.arg(wFUN) #%>% get()
-
   if (!is.matrix(dat)) dat %<>% as.matrix()
   if (nrow(points) != nrow(dat)) stop("Length of points and dat should be equal!")
-
-  l = fun.weight(points, range, res, wFUN = wFUN, ...)
-  weight = do.call(rbind, l) %>% as.data.table()
+  fun.weight = match.arg(fun.weight) %>% get()
+  wFUN = match.arg(wFUN) #%>% get()
+  
+  if (is.null(weight)) {
+    # pre-define weight will speed up calculation
+    l = fun.weight(points, range, res, wFUN = wFUN, ...)
+    weight = do.call(rbind, l) %>% as.data.table()  
+  }
   grid = weight[, .(lon, lat)] %>% unique() %>% setkeyv(c("lon", "lat"))
   
   ntime = ncol(dat)
@@ -47,9 +52,7 @@ spInterp <- function(points, dat, range, res = 1,
       .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
   }, .parallel = .parallel) %>% do.call(cbind, .)
-
-  # weight = weight
-  list(coord = grid, predicted = pred) %>% set_class("spInterp")
+  list(weight = weight, coord = grid, predicted = pred) %>% set_class("spInterp")
 }
 
 #' @rdname spInterp
@@ -68,7 +71,7 @@ print.spInterp <- function(x, ...) {
 #' @importFrom terra vect
 predict.spInterp <- function(object, data = NULL, ...) {
   ra <- interp2rast(object, mask = NULL)
-  points <- vect(data)
+  points <- vect(data[, c("lon", "lat")])
   # rm ID, only one variable left, hence returns vector
   terra::extract(ra, points)[, -1]
 }
