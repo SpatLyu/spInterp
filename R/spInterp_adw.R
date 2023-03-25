@@ -20,11 +20,12 @@
 #' @seealso [wFUN()], [cal_weight()]
 #' @example R/examples/ex-adw.R
 #' 
-#' @importFrom data.table merge.data.table setkeyv
+#' @importFrom data.table as.data.table merge.data.table setkeyv
 #' @export
 spInterp <- function(points, dat, range, res = 1, 
   fun.weight = c("cal_weight", "cal_weight_sf"), 
   wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"), 
+  .parallel = FALSE, 
   ...) 
 {
   fun.weight = match.arg(fun.weight) %>% get()
@@ -34,25 +35,40 @@ spInterp <- function(points, dat, range, res = 1,
   if (nrow(points) != nrow(dat)) stop("Length of points and dat should be equal!")
 
   l = fun.weight(points, range, res, wFUN = wFUN, ...)
-  weight = do.call(rbind, l)
+  weight = do.call(rbind, l) %>% as.data.table()
   grid = weight[, .(lon, lat)] %>% unique() %>% setkeyv(c("lon", "lat"))
   
   ntime = ncol(dat)
   names = colnames(dat) %||% 1:ntime
   
-  pred = lapply(set_names(1:ntime, names), function(i) {
+  pred = plyr::llply(set_names(1:ntime, names), function(i) {
     d = cbind(I = 1:nrow(dat), x = dat[, i])
     merge(weight[, .(lon, lat, I, w)], d, by = "I", sort = FALSE) %>% 
       .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
-  }) %>% do.call(cbind, .)
-  list(weight = weight, coord = grid, predicted = pred)
+  }, .parallel = .parallel) %>% do.call(cbind, .)
+
+  # weight = weight
+  list(coord = grid, predicted = pred) %>% set_class("spInterp")
 }
 
 #' @rdname spInterp
 #' @export
 spInterp_adw <- function(points, dat, range, res = 1, 
   fun.weight = c("cal_weight", "cal_weight_sf"), ...) {
-  
   spInterp(points, dat, range, res, fun.weight, wFUN = "wFUN_adw", ...)
+}
+
+#' @export 
+print.spInterp <- function(x, ...) {
+  str(x)
+  invisible()
+}
+
+#' @importFrom terra vect
+predict.spInterp <- function(object, data = NULL, ...) {
+  ra <- interp2rast(object, mask = NULL)
+  points <- vect(data)
+  # rm ID, only one variable left, hence returns vector
+  terra::extract(ra, points)[, -1]
 }

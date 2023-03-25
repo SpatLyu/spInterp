@@ -125,3 +125,24 @@ array_3dTo2d <- function(array, I_grid = NULL) {
   }
   return(array)
 }
+
+# https://stackoverflow.com/questions/43627679/round-any-equivalent-for-dplyr
+# round_any <- function(x, accuracy, f = round) {
+#   f(x / accuracy) * accuracy
+# }
+
+writeLines_list <- function(l, f) {
+  con <- file(f, "w")
+  on.exit(close(con))
+  
+  for (x in unlist(l)) {
+    writeLines(x, con)
+    # readr::write_lines(l, f, append = TRUE, num_threads = 1)
+  }
+  invisible()
+}
+
+#' @importFrom dplyr mutate across
+dt_round <- function (d, digits = 2) {
+  mutate(d, across(where(is.double), ~round(.x, digits)))
+}

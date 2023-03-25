@@ -1,0 +1,35 @@
+---
+title: "kfold"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{kfold}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## 交叉验证模式
+
+```{r}
+library(spInterp)
+
+data(TempBrazil) # Temperature for some poins of Brazil
+
+X <- TempBrazil[, 1:2] %>% set_names(c("lon", "lat"))
+Y <- TempBrazil[, 3] %>% as.matrix()  # Vector with observations in points
+range <- c(-78, -34, -36, 5)
+res = 1
+```
+
+```{r}
+r = kford_ml(X, Y, FUN = spInterp_adw, 
+  range = range, res = res, cdd = 450)
+
+print(r)
+```

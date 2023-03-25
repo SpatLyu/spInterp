@@ -12,6 +12,7 @@ spInterp(
   res = 1,
   fun.weight = c("cal_weight", "cal_weight_sf"),
   wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"),
+  .parallel = FALSE,
   ...
 )
 

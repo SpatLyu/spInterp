@@ -49,7 +49,7 @@ res = 1
 # Compare with the R package adw
 dd = cbind(loc, value = dat[,1])
 system.time({
-  r_adw <- adw::adw(dd, range[1], range[2], range[3], range[4], cdd = 450*1e3, gridSize = res)  
+  r_adw <- adw::adw(dd, range, cdd = 450 * 1e3, gridsize = res)
 })
 #>  用户  系统  流逝 
 #> 61.55  0.21 61.75

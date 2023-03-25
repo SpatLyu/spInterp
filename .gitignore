@@ -16,3 +16,13 @@ R/examples/test*
 
 */temp/*
 */*/temp/*
+backup
+*.grd
+inst/doc
+
+# suppress anusplin
+*anusplin*
+exec
+*.dat
+scripts
+*.tif

@@ -52,19 +52,23 @@ library(adw)
 
 data(TempBrazil) # Temperature for some poins of Brazil
 
-loc <- TempBrazil[, 1:2] %>% set_names(c("lon", "lat"))
-dat <- TempBrazil[, 3] %>% as.matrix()  # Vector with observations in points
+X <- TempBrazil[, 1:2] %>% set_names(c("lon", "lat"))
+Y <- TempBrazil[, 3] %>% as.matrix()  # Vector with observations in points
 
 range <- c(-78, -34, -36, 5)
 res = 1
 # Compare with the R package adw
-dd = cbind(loc, value = dat[,1])
+dd = cbind(X, value = Y[,1])
+```
+
+```{r}
 system.time({
-  r_adw <- adw::adw(dd, range[1], range[2], range[3], range[4], cdd = 450*1e3, gridSize = res)  
+  r_adw <- adw::adw(dd, range, cdd = 450 * 1e3, gridsize = res)
 })
 
+# profvis::profvis({
 system.time({
-  r <- spInterp_adw(loc, dat, range, res = res, cdd = 450)
+  r <- spInterp_adw(X, Y, range, res = res, cdd = 450)
 })
 ```
 
@@ -76,7 +80,7 @@ df = rbind(
 library(ggplot2)
 ggplot(df, aes(lon, lat)) + 
   geom_raster(aes(fill = value)) +
-  geom_point(data = loc, size = 1, shape = 3, color = "red") +
+  geom_point(data = X, size = 1, shape = 3, color = "red") +
   facet_wrap(~method) + 
   lims(x = range[1:2], y = range[3:4]) -> p
 p
