@@ -12,6 +12,7 @@
 #' `c("cal_weight", "cal_weight_sf")`.
 #' @param weight predefined weight to speed-up calculation, which is returned 
 #' by [spInterp()] itself.
+#' @param Z covariates, not used
 #' 
 #' @author Dongdong Kong and Heyang Song
 #' @references 
@@ -29,6 +30,7 @@ spInterp <- function(points, dat, range, res = 1,
   wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"), 
   .parallel = FALSE, 
   ..., 
+  Z = NULL, 
   weight = NULL) 
 {
   if (!is.matrix(dat)) dat %<>% as.matrix()
@@ -52,6 +54,7 @@ spInterp <- function(points, dat, range, res = 1,
       .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
   }, .parallel = .parallel) %>% do.call(cbind, .)
+  
   list(weight = weight, coord = grid, predicted = pred) %>% set_class("spInterp")
 }
 
@@ -60,18 +63,4 @@ spInterp <- function(points, dat, range, res = 1,
 spInterp_adw <- function(points, dat, range, res = 1, 
   fun.weight = c("cal_weight", "cal_weight_sf"), ...) {
   spInterp(points, dat, range, res, fun.weight, wFUN = "wFUN_adw", ...)
-}
-
-#' @export 
-print.spInterp <- function(x, ...) {
-  str(x)
-  invisible()
-}
-
-#' @importFrom terra vect
-predict.spInterp <- function(object, data = NULL, ...) {
-  ra <- interp2rast(object, mask = NULL)
-  points <- vect(data[, c("lon", "lat")])
-  # rm ID, only one variable left, hence returns vector
-  terra::extract(ra, points)[, -1]
 }

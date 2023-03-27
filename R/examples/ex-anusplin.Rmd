@@ -2,8 +2,6 @@
 library(Ipaper)
 library(ggplot2)
 
-
-
 f_alt = system.file("anusplin_demo/china_dem_025deg.txt", package = "spInterp")
 range <- c(69.625, 140.375, 14.625, 55.375)
 # range <- c(70, 140, 15, 55) # 高程数据的range有误

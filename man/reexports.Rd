@@ -7,6 +7,9 @@
 \alias{\%<>\%}
 \alias{\%$\%}
 \alias{set_names}
+\alias{Tps}
+\alias{predictSurface}
+\alias{image.plot}
 \alias{rowMeans2}
 \title{Objects exported from other packages}
 \keyword{internal}
@@ -15,6 +18,8 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{fields}{\code{\link[fields]{image.plot}}, \code{\link[fields]{predictSurface}}, \code{\link[fields]{Tps}}}
+
   \item{magrittr}{\code{\link[magrittr:exposition]{\%$\%}}, \code{\link[magrittr:compound]{\%<>\%}}, \code{\link[magrittr:pipe]{\%>\%}}, \code{\link[magrittr:aliases]{set_names}}}
 
   \item{matrixStats}{\code{\link[matrixStats]{rowMeans2}}}

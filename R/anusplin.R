@@ -85,7 +85,7 @@
 #' - `type.alt != "none"`: file.alt is file path
 #' - `type.alt == "none"`: file.alt is a const real number
 #' 
-#' #' @param alt Type of elevation was treated, possible values are:
+#' @param alt Type of elevation was treated, possible values are:
 #' - `cov`  : considered as independent covariates (**default**)
 #' - `spl`  : considered as independent spline variables
 #' 

@@ -65,9 +65,9 @@ lat must be included, site and alt are optional, the others are variable names.}
 \itemize{
 \item \code{type.alt != "none"}: file.alt is file path
 \item \code{type.alt == "none"}: file.alt is a const real number
-}
+}}
 
-#' @param alt Type of elevation was treated, possible values are:
+\item{alt}{Type of elevation was treated, possible values are:
 \itemize{
 \item \code{cov}  : considered as independent covariates (\strong{default})
 \item \code{spl}  : considered as independent spline variables

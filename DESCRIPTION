@@ -15,6 +15,7 @@ Imports:
     magrittr,
     data.table, 
     dplyr, purrr, 
+    fields, 
     plyr, matrixStats,
     hydroGOF,
     stringr, glue

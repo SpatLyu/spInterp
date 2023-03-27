@@ -1,3 +1,4 @@
+#' @rdname spInterp
 #' @export 
 spInterp_anusplin <- function(X, Y, range, outdir = "output", 
   prefix = "RH", 

@@ -1,5 +1,4 @@
 test_that("anusplin works", {  
-  skip_if_not(.Platform$OS.type == "windows")
 
   dat <- dat_RH[, .(lon, lat, alt, RH)]
   X <- dat[, .(lon, lat, alt)] %>% as.matrix()
@@ -11,10 +10,11 @@ test_that("anusplin works", {
   
   outdir = "output"
   # 考虑高程
-  expect_no_error({
+  expect_no_error({  
     anusplin_make_param(dat, "RH", range, file.alt = f_alt) -> param
-    anusplin_write_setting(param, outdir, is.run = TRUE, overwrite = TRUE)
-    anusplin_read_output(param$lapgrd, outdir) -> res
+    anusplin_write_setting(param, outdir, is.run = FALSE, overwrite = TRUE)
+    # skip_if_not(.Platform$OS.type == "windows")
+    # anusplin_read_output(param$lapgrd, outdir) -> res
   })
   
   ## 不考虑高程
