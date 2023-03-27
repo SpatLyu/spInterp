@@ -11,11 +11,11 @@ test_that("anusplin works", {
   
   outdir = "output"
   # 考虑高程
-  # expect_no_error({
-  #   anusplin_make_param(dat, "RH", range, file.alt = f_alt) -> param
-  #   anusplin_write_setting(param, outdir, is.run = TRUE, overwrite = TRUE)
-  #   anusplin_read_output(param$lapgrd, outdir) -> res
-  # })
+  expect_no_error({
+    anusplin_make_param(dat, "RH", range, file.alt = f_alt) -> param
+    anusplin_write_setting(param, outdir, is.run = TRUE, overwrite = TRUE)
+    anusplin_read_output(param$lapgrd, outdir) -> res
+  })
   
   ## 不考虑高程
   # expect_no_error({
