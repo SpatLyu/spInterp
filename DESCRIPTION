@@ -22,6 +22,7 @@ Imports:
 Suggests: 
     ggplot2,
     geosphere,
+    raster,
     units,
     testthat (>= 3.0.0),
     knitr,

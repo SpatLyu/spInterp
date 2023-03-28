@@ -126,10 +126,10 @@ r
 #> NULL
 ```
 
-# 2. 不考虑高程时的结果
+## 1.4. 高程作为自变量
 
 ``` r
-spInterp_anusplin(X, Y, range, res, file.alt = f_dem)
+spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem, alt = "spl")
 #> [ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
 #> List of 2
 #>  $ coord    :Classes 'data.table' and 'data.frame':  2308 obs. of  2 variables:
@@ -137,7 +137,7 @@ spInterp_anusplin(X, Y, range, res, file.alt = f_dem)
 #>   ..$ y: num [1:2308] 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 ...
 #>   ..- attr(*, ".internal.selfref")=<externalptr> 
 #>  $ predicted:Classes 'data.table' and 'data.frame':  2308 obs. of  1 variable:
-#>   ..$ RH: num [1:2308] 144 139 134 130 126 ...
+#>   ..$ RH: num [1:2308] 95.2 91.8 88.4 85.3 82.4 ...
 #>   ..- attr(*, ".internal.selfref")=<externalptr> 
 #>  - attr(*, "class")= chr "spInterp"
 #> 
@@ -149,8 +149,65 @@ spInterp_anusplin(X, Y, range, res, file.alt = f_dem)
 #> coord. ref. :  
 #> source(s)   : memory
 #> name        :      RH 
-#> min value   :  11.127 
-#> max value   : 408.459
+#> min value   :  29.546 
+#> max value   : 253.067
+```
+
+``` r
+r = kford_ml(X, Y, FUN = spInterp_anusplin, 
+  range = range, res = res, file.alt = f_dem, alt = "spl", kfold = 5)
+#>   |                                                                              |                                                                      |   0%[ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#>   |                                                                              |==============                                                        |  20%[ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#>   |                                                                              |============================                                          |  40%[ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#>   |                                                                              |==========================================                            |  60%[ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#>   |                                                                              |========================================================              |  80%[ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#>   |                                                                              |======================================================================| 100%
+r
+#> # A tibble: 6 × 12
+#>   kfold     R pvalue    R2   NSE   KGE  RMSE   MAE   Bias Bias_perc    AI n_sim
+#>   <chr> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>     <dbl> <dbl> <int>
+#> 1 Fold1 0.889      0 0.791 0.786 0.877  5.56  4.10  0.479     0.007 0.941   168
+#> 2 Fold2 0.875      0 0.765 0.765 0.821  6.51  4.25  0.13      0.002 0.929   168
+#> 3 Fold3 0.892      0 0.795 0.792 0.835  5.91  4.23  0.726     0.011 0.939   168
+#> 4 Fold4 0.923      0 0.852 0.847 0.837  4.81  3.61 -0.348    -0.005 0.954   168
+#> 5 Fold5 0.867      0 0.752 0.748 0.84   6.30  4.38  0.578     0.009 0.928   168
+#> 6 all   0.888      0 0.789 0.788 0.843  5.85  4.11  0.313     0.005 0.938   840
+#> 
+#> Fold index:
+#> List of 5
+#>  $ Fold1: int [1:168] 1 2 23 32 55 56 59 67 72 75 ...
+#>  $ Fold2: int [1:168] 4 5 17 22 25 26 29 30 34 38 ...
+#>  $ Fold3: int [1:168] 3 6 9 19 21 28 33 35 36 37 ...
+#>  $ Fold4: int [1:168] 8 10 11 12 15 16 20 31 42 45 ...
+#>  $ Fold5: int [1:168] 7 13 14 18 24 27 44 49 52 53 ...
+#> NULL
+```
+
+# 2. 不考虑高程时的结果
+
+``` r
+spInterp_anusplin(X, Y, range, res, file.alt = NULL)
+#> [ok] anusplin_path: z:/GitHub/rpkgs/spInterp/inst/exec
+#> List of 2
+#>  $ coord    :Classes 'data.table' and 'data.frame':  2800 obs. of  2 variables:
+#>   ..$ x: num [1:2800] 70.5 71.5 72.5 73.5 74.5 75.5 76.5 77.5 78.5 79.5 ...
+#>   ..$ y: num [1:2800] 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 54.5 ...
+#>   ..- attr(*, ".internal.selfref")=<externalptr> 
+#>  $ predicted:Classes 'data.table' and 'data.frame':  2800 obs. of  1 variable:
+#>   ..$ RH: num [1:2800] 31.9 38.2 44.3 50.4 56.3 ...
+#>   ..- attr(*, ".internal.selfref")=<externalptr> 
+#>  - attr(*, "class")= chr "spInterp"
+#> 
+#> [data] ----------------
+#> class       : SpatRaster 
+#> dimensions  : 40, 70, 1  (nrow, ncol, nlyr)
+#> resolution  : 1, 1  (x, y)
+#> extent      : 70, 140, 15, 55  (xmin, xmax, ymin, ymax)
+#> coord. ref. :  
+#> source(s)   : memory
+#> name        :      RH 
+#> min value   : -29.176 
+#> max value   : 407.470
 ```
 
 ## 2.1. k-fold cross validation

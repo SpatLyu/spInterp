@@ -8,6 +8,8 @@ test_that("anusplin works", {
   range <- c(70, 140, 15, 55)
   r_dem <- get_chinadem(res = res) %>% round(1)
   f_dem <- "output/dem.asc"
+  
+  dir.create(dirname(f_dem))
   write_dem(r_dem, f_dem, digits = 1)
   
   outdir = "output"

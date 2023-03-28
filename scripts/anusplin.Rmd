@@ -59,6 +59,7 @@ ans
 spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem)
 ```
 
+
 ## 1.3. k-fold cross validation
 ```{r}
 r = kford_ml(X, Y, FUN = spInterp_anusplin, 
@@ -66,10 +67,23 @@ r = kford_ml(X, Y, FUN = spInterp_anusplin,
 r
 ```
 
+## 1.4. 高程作为自变量
+
+```{r}
+spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem, alt = "spl")
+```
+
+```{r}
+r = kford_ml(X, Y, FUN = spInterp_anusplin, 
+  range = range, res = res, file.alt = f_dem, alt = "spl", kfold = 5)
+r
+```
+
+
 # 2. 不考虑高程时的结果
 
 ```{r}
-spInterp_anusplin(X, Y, range, res, file.alt = f_dem)
+spInterp_anusplin(X, Y, range, res, file.alt = NULL)
 ```
 
 ## 2.1. k-fold cross validation
