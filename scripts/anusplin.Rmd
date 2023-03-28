@@ -32,41 +32,44 @@ dat <- dat_RH[, .(lon, lat, alt, RH)]
 X <- dat[, .(lon, lat, alt)] %>% as.matrix()
 Y <- dat[, .(RH)] %>% as.matrix()
 
-f_alt <- system.file("anusplin_demo/china_dem_025deg.txt", package = "spInterp")
-range <- c(69.625, 140.375, 14.625, 55.375)
-# range <- c(70, 140, 15, 55) # 高程数据的range有误
+res <- 1
+range <- c(70, 140, 15, 55)
+r_dem <- get_chinadem(res = res) %>% round(1)
+f_dem <- "output/dem.asc"
+
+write_dem(r_dem, f_dem, digits = 1)
 ```
 
 # 1. anusplin
 
 ## 1.1. fast example
 ```{r}
-outdir = "output"
+outdir <- "output"
 
-anusplin_make_param(dat, "RH", range, file.alt = f_alt) -> param
+anusplin_make_param(dat, "RH", range, res, file.alt = f_dem, cvt.coef = 1e3) -> param
 anusplin_write_setting(param, outdir, is.run = TRUE, overwrite = TRUE)
-anusplin_read_output(param$lapgrd, outdir) -> res
+anusplin_read_output(param$lapgrd, outdir) -> ans
 
-res
+ans
 ```
 
 ## 1.2. 另外一种等价的调用方法
 
 ```{r}
-spInterp_anusplin(X, Y, range = range, file.alt = f_alt)
+spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem)
 ```
 
 ## 1.3. k-fold cross validation
 ```{r}
 r = kford_ml(X, Y, FUN = spInterp_anusplin, 
-  file.alt = f_alt, range = range, kfold = 5)
+  range = range, res = res, file.alt = f_dem, kfold = 5)
 r
 ```
 
 # 2. 不考虑高程时的结果
 
 ```{r}
-spInterp_anusplin(X, Y, range = range, file.alt = f_alt)
+spInterp_anusplin(X, Y, range, res, file.alt = f_dem)
 ```
 
 ## 2.1. k-fold cross validation
@@ -79,16 +82,26 @@ r = kford_ml(X, Y, FUN = spInterp_anusplin,
 r
 ```
 
-
 # 3. 与adw进行对比
 ```{r}
 r <- kford_ml(X[, c("lon", "lat")], Y,
   FUN = spInterp_adw,
-  range = range, res = 0.5, cdd = 450
+  range = range, res = res, cdd = 450
 )
 r
 ```
 
-# TODO
 
-- [ ] 高程自动采样
+```{r}
+## mask china
+# shp <- vect("data-raw/shp/bou1_4p.shp")
+# ra = rast(ans) %>% mask(shp)
+# plot(ra)
+# plot(shp, add = TRUE, col = "transparent")
+
+## 原数据
+# p <- ggplot(dat, aes(lon, lat, color = RH)) +
+#   geom_point() +
+#   scale_color_gradientn(colours = rcolors::get_color("amwg256", 12))
+# write_fig(p, "Rplot2.pdf", 10, 5)
+```

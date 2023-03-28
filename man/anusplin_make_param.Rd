@@ -16,17 +16,18 @@ anusplin_make_param(
   file.alt = NULL,
   alt = c("cov", "spl"),
   type.alt = "arcinfo_grid",
-  type.grd = "arcinfo_grid",
+  type.grd = "xyz",
   type.mask = "none",
   file.mask = NULL,
-  cvt.lon = c(0, 1),
-  cvt.lat = c(0, 1),
+  cvt.lon = c(0, 5),
+  cvt.lat = c(0, 5),
   cvt.alt = c(1, 1),
   cvt.coef = 1000,
   trans.dep = 0,
   err.wgt = 0,
   optimize = 1,
   smooth = 1,
+  ...,
   err.cov = 2,
   grid.pos = 1,
   essential = TRUE
@@ -140,12 +141,14 @@ possible values are:
 \item \code{4}: minimise GML
 }}
 
+\item{...}{ignored.}
+
 \item{err.cov}{test}
 
 \item{grid.pos}{Grid position option, a non-negative integer, possible values are:
 \itemize{
-\item \code{0}: grid points at cell corners (\strong{default})
-\item \code{1}: grid points at cell centres
+\item \code{0}: grid points at cell corners
+\item \code{1}: grid points at cell centres (\strong{default})
 }}
 
 \item{essential}{If \code{True}, only export essential process files, large residual
@@ -183,12 +186,23 @@ Format the input data and generate the configuration file required for ANUSPLIN 
 }
 
 \examples{
-# data(TempBrazil)
-# colnames(TempBrazil) <- c("lon", "lat", "temp")
-# df = TempBrazil
+\dontrun{
+dat <- dat_RH[, .(lon, lat, alt, RH)]
+X <- dat[, .(lon, lat, alt)] \%>\% as.matrix()
+Y <- dat[, .(RH)] \%>\% as.matrix()
 
-# # range <- c(70, 140, 15, 55)
-# range <- c(-78, -34, -36, 5)
-# p = anusplin_make_param(df, "TempBrazil", "dem.txt", range, alt = NULL)
-# str(p)
+res <- 1
+range <- c(70, 140, 15, 55)
+r_dem <- get_chinadem(res = res) \%>\% round(1)
+f_dem <- "output/dem.asc"
+write_dem(r_dem, f_dem, digits = 1)
+
+outdir <- "output"
+
+anusplin_make_param(dat, "RH", range, res, file.alt = f_dem, cvt.coef = 1e3) -> param
+anusplin_write_setting(param, outdir, is.run = TRUE, overwrite = TRUE)
+anusplin_read_output(param$lapgrd, outdir) -> ans
+
+ans
+}
 }

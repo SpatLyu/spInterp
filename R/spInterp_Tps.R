@@ -13,9 +13,7 @@ spInterp_Tps <- function(points, dat, range, res = 1,
   Z = NULL, ZGrid = NULL, 
   # fun.weight = c("cal_weight", "cal_weight_sf"), 
   # wFUN = c("wFUN_adw", "wFUN_idw", "wFUN_thiessen", "wFUN_mean"), 
-  .parallel = FALSE, 
-  ..., 
-  weight = NULL) 
+  .parallel = FALSE, ...) 
 {
   if (!is.matrix(dat)) dat %<>% as.matrix()
   if (nrow(points) != nrow(dat)) stop("Length of points and dat should be equal!")
@@ -29,7 +27,7 @@ spInterp_Tps <- function(points, dat, range, res = 1,
   coord <- expand.grid(lon = grid$lon, lat = grid$lat) %>% data.table()
   vals <- pred$z %>% c()
   
-  listk(weight, coord, predicted = vals) %>% set_class("spInterp")
+  listk(coord, predicted = vals) %>% set_class("spInterp")
   # cbind(coord, vals)
 }
 

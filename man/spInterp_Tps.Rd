@@ -12,8 +12,7 @@ spInterp_Tps(
   Z = NULL,
   ZGrid = NULL,
   .parallel = FALSE,
-  ...,
-  weight = NULL
+  ...
 )
 }
 \arguments{

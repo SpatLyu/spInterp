@@ -71,3 +71,14 @@ read_xyz_multi <- function(fs) {
 # - `A`    : 输出字符型变量；
 # - `Lw`   : 输出逻辑型变量，w表示输出的字段宽度；
 # - `Gw.d` : 输出实数，根据大小选择Fw.d或Ew.d。
+
+#' @export 
+write_dem <- function(r, outfile = "output/dem.asc", digits = 1) {
+  raster::writeRaster(raster::raster(r) %>% round(digits),
+  # terra::writeRaster(r %>% round(1),
+    outfile,
+    # datatype = "INT4S",
+    NAflag = -9999L,
+    overwrite = TRUE
+  )
+}

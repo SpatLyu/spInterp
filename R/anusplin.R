@@ -96,12 +96,13 @@
 #' @param err.cov test
 #' 
 #' @param grid.pos Grid position option, a non-negative integer, possible values are:
-#' - `0`: grid points at cell corners (**default**)
-#' - `1`: grid points at cell centres
+#' - `0`: grid points at cell corners 
+#' - `1`: grid points at cell centres (**default**)
 #' 
 #' @param essential If `True`, only export essential process files, large residual
 #' file, optimisation parameters file, data list file and validation data file are
 #' ignored.
+#' @param ... ignored.
 #' 
 #' @inheritSection query_grid_type grid_type
 #' 
@@ -116,7 +117,7 @@
 #' @importFrom data.table as.data.table
 #' @importFrom plyr round_any
 #' @importFrom terra rast values ext res
-#'
+#' 
 #' @example R/examples/ex-anusplin.R
 #' @export
 anusplin_make_param <- function(
@@ -130,19 +131,19 @@ anusplin_make_param <- function(
 
   alt = c("cov", "spl"),
   type.alt = "arcinfo_grid",
-  type.grd = "arcinfo_grid",
+  type.grd = "xyz", #"arcinfo_grid",
   type.mask = "none", file.mask = NULL,
   
   # lim.lon = "auto", lim.lat = "auto", 
   # lim.alt = "auto",
-  cvt.lon = c(0, 1), cvt.lat = c(0, 1), cvt.alt = c(1, 1),
+  cvt.lon = c(0, 5), cvt.lat = c(0, 5), cvt.alt = c(1, 1),
   cvt.coef = 1000,
   
   trans.dep = 0,
   err.wgt = 0,
   optimize = 1,
   smooth = 1,
-  
+  ...,
   err.cov = 2,
   grid.pos = 1,
   essential = TRUE) 
@@ -272,6 +273,9 @@ anusplin_make_param <- function(
     ""  # nmax_valid
   ) %>% set_class("param")
   
+  fmt_out = glue("({n.sur + 2}f{width}.3)")
+  ext = "grd"
+
   lapgrd <- listk(
     file.sur,
     n.surf       = 0,
@@ -295,15 +299,15 @@ anusplin_make_param <- function(
     
     type.grd     = type.grd,
     na           = if(is.null(file.alt)) NULL else missing,                     # Special value of output grid
-    fout         = glue("{names[pos.var]}.grd"),    # oupput grid file name
-    fmt          = glue("({n.sur + 2}f{width}.3)"), # Output grid format
+    fout         = glue("{names[pos.var]}.{ext}"),    # oupput grid file name
+    fmt          = fmt_out, # Output grid format
     
     # output error
     type.err     = type.grd, # Mode of output error grids
     na_err       = if(is.null(file.alt)) NULL else missing,
 
-    f_err        = glue("cov_{names[pos.var]}.grd"),
-    fmt_err      = glue("({n.sur + 2}f{width}.3)"),
+    f_err        = glue("cov_{names[pos.var]}.{ext}"),
+    fmt_err      = fmt_out,
     "",
     ""
   ) %>% set_class("param")
