@@ -65,7 +65,7 @@ spInterp_bilinear <- function(
     v01 <- z[pos[cbind(lx1    , ly1 + 1)], , drop = FALSE]
     v10 <- z[pos[cbind(lx1 + 1, ly1    )], , drop = FALSE]
     v11 <- z[pos[cbind(lx1 + 1, ly1 + 1)], , drop = FALSE]
-
+    
     if (na.rm == TRUE) {
         vv    <- abind(v00, v01, v10, v11, along = 3)
         vmean <- apply_3d(vv, 3, matrixStats::rowMeans2)

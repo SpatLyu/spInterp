@@ -220,9 +220,19 @@ createFolds <- function(y, k = 10, list = TRUE, returnTrain = FALSE) {
 }
 
 
+GOF <- function(yobs, ysim, w, include.cv = FALSE, include.r = TRUE) UseMethod("GOF", yobs)
+
+GOF.matrix <- function(yobs, ysim, w, include.cv = FALSE, include.r = TRUE) {
+  obs = c(yobs)
+  sim = c(as.matrix(ysim))
+  # obs = rowMeans(yobs, na.rm = TRUE)
+  # sim = rowMeans(as.matrix(ysim), na.rm = TRUE)
+  GOF(obs, sim, w, include.cv, include.r)
+}
+
 #' @importFrom hydroGOF KGE
 #' @importFrom dplyr tibble
-GOF <- function(yobs, ysim, w, include.cv = FALSE, include.r = TRUE) {
+GOF.default <- function(yobs, ysim, w, include.cv = FALSE, include.r = TRUE) {
   if (missing(w)) {
     w <- rep(1, length(yobs))
   }

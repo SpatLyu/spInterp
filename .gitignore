@@ -26,3 +26,5 @@ backup
 # *.exe
 data-raw/shp
 *.html
+*.nc
+*.fst

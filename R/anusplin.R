@@ -169,7 +169,7 @@ anusplin_make_param <- function(
     cvt.alt <- NULL
     cvt.coef <- NULL
   } else {
-    r.dem <- rast(file.alt) %>% check_rast_grid(res, range)
+    r.dem <- rast(file.alt) %>% check_rast_grid(range, res)
     lim.alt <- c_range(dat$alt, values(r.dem)) %>% {c(floor(.[1]), ceiling(.[2]))}
     cvt.alt <- paste(c(lim.alt, cvt.alt), collapse = " ")
   }

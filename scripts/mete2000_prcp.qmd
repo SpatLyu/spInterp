@@ -1,0 +1,124 @@
+```{r}
+library(Ipaper)
+library(tidymet)
+library(lubridate)
+```
+
+```{r}
+d1 = fread("Z:/DATA/China/ChinaMet_hourly_mete2000/data-raw/China_Mete2000_hourly_2021-2021_[20210101Z00,20220106Z23].csv")
+d2 = fread("Z:/DATA/China/ChinaMet_hourly_mete2000/data-raw/China_Mete2000_hourly_2022-2022_[20220101Z00,20230106Z23].csv")
+
+df = rbind(d1, d2)
+
+data = df[, .(date, site = Station_Id_C, 
+  U2 = WIN_S_Avg_2mi, Pa = PRS, 
+  Ta = TEM, Tmin = TEM_Min, Tmax = TEM_Max,
+  RH = RHU, prcp = PRE_1h)]
+
+# 根据这些变量能否计算`PET`?
+```
+
+# 1. 仅处理降水数据
+
+1. 检查是否存在异常值
+
+```{r}
+options("datatable.print.nrow" = 100)
+data[prcp >= 9999, prcp := NA]
+data[U2 >= 9999, U2 := NA]
+data[Pa >= 9999, Pa := NA]
+data[Ta >= 9999, `:=`(Ta = NA, Tmin = NA, Tmax = NA, RH = NA)]
+data[RH >= 100, RH := 100]
+
+export(data, "China_Mete2000_hourly_tidy_2021-2022.fst")
+```
+
+```{r}
+data_daily = data[, lapply(.SD, mean, na.rm = TRUE), .(date = date(date), site)]
+data_daily[, prcp := prcp * 24]
+
+export(data_daily, "China_Mete2000_daily_tidy_2021-2022.fst")
+```
+
+```{r}
+library(sf2)
+library(ggplot2)
+
+basin = read_sf("//kong-nas/usbshare3-1/Research/phenology/phenologyTP/data-raw/shp/basin_长江.shp")
+
+p = ggplot(st_met2176_hourly[lon > 50]) + 
+   geom_sf(data = bou1_4p, fill = "transparent", color = "black", linewidth = 0.2) + 
+   geom_sf(data = basin, fill = "transparent", color = "red", linewidth = 0.4) + 
+  geom_point(aes(lon, lat), size = 0.3)
+
+write_fig(p, "Figure1_st_met2177_站点分布.pdf")
+```
+
+# 2. 插值
+```{r}
+library(data.table)
+
+range <- c(70, 140, 15, 55)
+cellsize <- 0.25
+# weight <- weight_adw(loc, range = range, res = 1)
+# first example:
+st = st_met2176_hourly[, .(site, lon, lat)]
+df_mat = dcast(data_daily, site ~ date, value.var = "prcp")
+mat = df_mat[, -1] |> as.matrix()
+loc = merge(df_mat[, .(site)], st)
+all.equal(loc$site, df_mat$site)
+
+X <- loc[, .(lon, lat)] |> as.matrix()
+Y <- mat#[, 1:10]
+
+cdd = 1000
+# l = cal_weight(X, range, res=cellsize, cdd = cdd, wFUN = "wFUN_adw")
+# weight = do.call(rbind, l) %>% as.data.table()  
+
+r <- spInterp_adw(X, Y, range, res = cellsize, cdd = cdd)
+print(str(r))
+
+res <- r %$% cbind(coord, predicted)
+ra <- rast(res, extent = ext(range))
+ra2 <- ra |> mask(vect(bou1_4p))
+
+fout <- sprintf("China_mete2000_prcp_2021-2022_G%03d_cdd=%d.nc", cellsize * 100, cdd)
+writeCDF(ra2, fout, "prcp", "precipitation", "mm/d",
+  prec="float", compression=1,
+  overwrite = TRUE)
+# r2 <- spInterp_adw(X, Y, range, res = cellsize, cdd=cdd, weight=weight)
+# all.equal(r, r2)
+```
+
+## 2.1. 测试
+
+```{r}
+cdd <- 500
+# l <- cal_weight(X, range, res = cellsize, cdd = cdd, wFUN = "wFUN_adw")
+# weight <- do.call(rbind, l) %>% as.data.table()
+X <- loc[, .(lon, lat)] |> as.matrix()
+Y <- mat[, 1:30]
+
+## 交叉验证挑选模型参数
+l = kford_ml(
+  X, Y,
+  FUN = spInterp_adw,
+  # weight=weight,
+  cdd = cdd, 
+  range = range, res = cellsize
+)
+l
+```
+
+```{r}
+
+```
+
+```{r}
+library(terra)
+
+ggplot(df, aes(lon, lat)) +
+  geom_raster(aes(fill = value)) +
+  geom_point(data = loc, size = 0.5, shape = 3, color = "red") +
+  lims(x = range[1:2], y = range[3:4])
+```

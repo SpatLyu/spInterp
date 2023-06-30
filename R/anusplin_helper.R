@@ -23,7 +23,7 @@ query_grid_type <- function(name = "arcinfo_grid") {
 }
 
 #' @importFrom terra res ext
-check_rast_grid <- function(r, res, range) {
+check_rast_grid <- function(r, range, res) {
   if (!all(res(r) == res, as.vector(ext(r)) == range)) {
     stop("Dimensions of rast and `range`, `res` are mismatch!")
   }

@@ -4,7 +4,17 @@
 \alias{kford_ml}
 \title{kfold machine learning}
 \usage{
-kford_ml(X, Y, kfold = 5, FUN, ..., Z = NULL, seed = 1)
+kford_ml(
+  X,
+  Y,
+  kfold = 5,
+  FUN,
+  ...,
+  weight = NULL,
+  Z = NULL,
+  seed = 1,
+  na.rm = FALSE
+)
 }
 \description{
 kfold machine learning
