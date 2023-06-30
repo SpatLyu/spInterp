@@ -7,7 +7,7 @@ test_that("kfold works", {
   range <- c(-78, -34, -36, 5)
   res = 1
 
-  r = kford_ml(X, Y,
+  r = kfold_ml(X, Y,
     FUN = spInterp_adw,
     range = range, res = res, cdd = 450
   )

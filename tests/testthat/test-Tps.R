@@ -21,7 +21,7 @@ test_that("multiplication works", {
   })
   
   # kfold
-  r2 = kford_ml(X, Y,
+  r2 = kfold_ml(X, Y,
     FUN = spInterp_Tps,
     range = range, res = res, Z = Z, ZGrid = ZGrid
   )

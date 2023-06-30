@@ -1,9 +1,9 @@
 #' kfold machine learning
-#' @name kford_ml
+#' @name kfold_ml
 #' 
 #' @importFrom plyr llply
 #' @export
-kford_ml <- function(X, Y, kfold = 5, FUN, ..., weight = NULL, Z = NULL, seed = 1, na.rm = FALSE) { 
+kfold_ml <- function(X, Y, kfold = 5, FUN, ..., weight = NULL, Z = NULL, seed = 1, na.rm = FALSE) { 
   set.seed(seed)
   # 自动把全部为NA的行去除
   X <- as.matrix(X)
@@ -23,8 +23,8 @@ kford_ml <- function(X, Y, kfold = 5, FUN, ..., weight = NULL, Z = NULL, seed = 
   }  
   ind_lst <- createFolds(ind_good, k = kfold, list = TRUE)
   # ind_lst <- Ipaper::chunk(ind_good, kfold) %>% set_names(paste0("fold", 1:kfold))
-  
-  result <- llply(ind_lst, kford_calib,
+
+  result <- llply(ind_lst, kfold_calib,
     X = X, Y = Y,
     # FUN = randomForest, ntree = ntree, ...,
     FUN = FUN, ...,
@@ -32,11 +32,11 @@ kford_ml <- function(X, Y, kfold = 5, FUN, ..., weight = NULL, Z = NULL, seed = 
     weight = weight,
     .progress = "text"
   )
-  kford_tidy(result, ind_lst, Y)
+  kfold_tidy(result, ind_lst, Y)
 }
 
 #' @export
-kford_calib <- function(index, X, Y, FUN = xgboost, ..., weight = NULL, Z = NULL) {
+kfold_calib <- function(index, X, Y, FUN = xgboost, ..., weight = NULL, Z = NULL) {
   x_train <- X[-index, , drop = F]
   y_train <- Y[-index, , drop = F]
   z_train <- if (is.null(Z)) NULL else Z[-index, , drop = F]
@@ -54,7 +54,7 @@ kford_calib <- function(index, X, Y, FUN = xgboost, ..., weight = NULL, Z = NULL
 
 #' @importFrom purrr map
 #' @export
-kford_tidy <- function(res, ind_lst, Y) {
+kfold_tidy <- function(res, ind_lst, Y) {
   kfold_names <- names(ind_lst)
 
   ## 3. GOF information get

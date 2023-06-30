@@ -28,7 +28,7 @@ res = 1
 ```
 
 ```{r}
-r = kford_ml(X, Y, FUN = spInterp_adw, 
+r = kfold_ml(X, Y, FUN = spInterp_adw, 
   range = range, res = res, cdd = 450)
 
 print(r)

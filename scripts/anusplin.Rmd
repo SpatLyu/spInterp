@@ -62,7 +62,7 @@ spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem)
 
 ## 1.3. k-fold cross validation
 ```{r}
-r = kford_ml(X, Y, FUN = spInterp_anusplin, 
+r = kfold_ml(X, Y, FUN = spInterp_anusplin, 
   range = range, res = res, file.alt = f_dem, kfold = 5)
 r
 ```
@@ -74,7 +74,7 @@ spInterp_anusplin(X, Y, range = range, res = res, file.alt = f_dem, alt = "spl")
 ```
 
 ```{r}
-r = kford_ml(X, Y, FUN = spInterp_anusplin, 
+r = kfold_ml(X, Y, FUN = spInterp_anusplin, 
   range = range, res = res, file.alt = f_dem, alt = "spl", kfold = 5)
 r
 ```
@@ -91,14 +91,14 @@ spInterp_anusplin(X, Y, range, res, file.alt = NULL)
 X = dat[, .(lon, lat, alt)] %>% as.matrix()
 Y = dat[, .(RH)] %>% as.matrix()
 
-r = kford_ml(X, Y, FUN = spInterp_anusplin, 
+r = kfold_ml(X, Y, FUN = spInterp_anusplin, 
   file.alt = NULL, range = range, kfold = 5)
 r
 ```
 
 # 3. 与adw进行对比
 ```{r}
-r <- kford_ml(X[, c("lon", "lat")], Y,
+r <- kfold_ml(X[, c("lon", "lat")], Y,
   FUN = spInterp_adw,
   range = range, res = res, cdd = 450
 )

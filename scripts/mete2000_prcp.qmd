@@ -100,7 +100,7 @@ X <- loc[, .(lon, lat)] |> as.matrix()
 Y <- mat[, 1:30]
 
 ## 交叉验证挑选模型参数
-l = kford_ml(
+l = kfold_ml(
   X, Y,
   FUN = spInterp_adw,
   # weight=weight,

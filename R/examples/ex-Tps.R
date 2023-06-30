@@ -17,9 +17,9 @@ print(r)
 plot(r)
 
 # with dem
-kford_ml(X, Y, FUN = spInterp_Tps, 
+kfold_ml(X, Y, FUN = spInterp_Tps, 
   range = range, res = res, Z = Z, ZGrid = ZGrid)
 
 # without dem
-kford_ml(X, Y, FUN = spInterp_Tps, 
+kfold_ml(X, Y, FUN = spInterp_Tps, 
   range = range, res = res, Z = NULL, ZGrid = ZGrid)
