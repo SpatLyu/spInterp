@@ -15,14 +15,6 @@ data = df[, .(date, site = Station_Id_C,
   Ta = TEM, Tmin = TEM_Min, Tmax = TEM_Max,
   RH = RHU, prcp = PRE_1h)]
 
-# 根据这些变量能否计算`PET`?
-```
-
-# 1. 仅处理降水数据
-
-1. 检查是否存在异常值
-
-```{r}
 options("datatable.print.nrow" = 100)
 data[prcp >= 9999, prcp := NA]
 data[U2 >= 9999, U2 := NA]
@@ -30,15 +22,18 @@ data[Pa >= 9999, Pa := NA]
 data[Ta >= 9999, `:=`(Ta = NA, Tmin = NA, Tmax = NA, RH = NA)]
 data[RH >= 100, RH := 100]
 
-export(data, "China_Mete2000_hourly_tidy_2021-2022.fst")
-```
 
-```{r}
-data_daily = data[, lapply(.SD, mean, na.rm = TRUE), .(date = date(date), site)]
+data_daily <- data[, lapply(.SD, mean, na.rm = TRUE), .(date = date(date), site)]
 data_daily[, prcp := prcp * 24]
+# export(data, "China_Mete2000_hourly_tidy_2021-2022.fst")
+# export(data_daily, "China_Mete2000_daily_tidy_2021-2022.fst")
 
-export(data_daily, "China_Mete2000_daily_tidy_2021-2022.fst")
+# 根据这些变量能否计算`PET`?
 ```
+
+# 1. 仅处理降水数据
+
+1. 检查是否存在异常值
 
 ```{r}
 library(sf2)
@@ -57,6 +52,10 @@ write_fig(p, "Figure1_st_met2177_站点分布.pdf")
 # 2. 插值
 ```{r}
 library(data.table)
+library(terra)
+library(sf2)
+
+data_daily = import("China_Mete2000_daily_tidy_2021-2022.fst")
 
 range <- c(70, 140, 15, 55)
 cellsize <- 0.25
@@ -71,7 +70,7 @@ all.equal(loc$site, df_mat$site)
 X <- loc[, .(lon, lat)] |> as.matrix()
 Y <- mat#[, 1:10]
 
-cdd = 1000
+cdd = 500
 # l = cal_weight(X, range, res=cellsize, cdd = cdd, wFUN = "wFUN_adw")
 # weight = do.call(rbind, l) %>% as.data.table()  
 
@@ -82,12 +81,30 @@ res <- r %$% cbind(coord, predicted)
 ra <- rast(res, extent = ext(range))
 ra2 <- ra |> mask(vect(bou1_4p))
 
+dates <- names(ra2) |> date()
+time(ra2) <- dates
+
 fout <- sprintf("China_mete2000_prcp_2021-2022_G%03d_cdd=%d.nc", cellsize * 100, cdd)
 writeCDF(ra2, fout, "prcp", "precipitation", "mm/d",
   prec="float", compression=1,
   overwrite = TRUE)
 # r2 <- spInterp_adw(X, Y, range, res = cellsize, cdd=cdd, weight=weight)
 # all.equal(r, r2)
+```
+
+```{r}
+library(terra)
+
+dates = seq(make_date(2021), make_date(2023, 1, 6), by = "day")
+fout = "D:/Documents/WeChat Files/wxid_udml2ofatec521/FileStorage/File/2023-06/China_mete2000_prcp_2021-2022_G025_cdd=500.nc"
+ra2 = rast(raster::brick(fout))
+
+# dates = names(ra2) |> date()
+time(ra2) = dates
+
+writeCDF(ra2, basename(fout), "prcp", "precipitation", "mm/d",
+  prec="float", compression=1,
+  overwrite = TRUE)
 ```
 
 ## 2.1. 测试
