@@ -1,0 +1,159 @@
+```{r}
+library(Ipaper)
+library(data.table)
+
+library(tidymet)
+library(lubridate)
+library(terra)
+library(sf)
+library(sf2)
+
+devtools::load_all()
+```
+
+```{r}
+f = "Z:/DATA/China/ChinaHourlyPrcp/Hourly_prcp_HuBei_st159_1951-2015.fst"
+df = import(f)
+
+prov = read_sf("F:/CUG-Hydro/LakeHW/data-raw/shp/poly_湖北省市界.shp")
+basin = read_sf("D:/Documents/ArcGIS/Project_GuanShan/shp/basin_官山.shp")
+```
+
+
+```{r}
+df_mat = dcast(df[!is.na(date), ], 
+  date ~ site, value.var = "prcp")
+df_mat2 = df_mat[year(date) >= 1960]
+## 只做1960年之后的
+```
+
+## 1. 数据量过大，每年单独处理
+
+```{r}
+cdd = 500
+# l = cal_weight(X, range, res=cellsize, cdd = cdd, wFUN = "wFUN_adw")
+# weight = do.call(rbind, l) %>% as.data.table()  
+r <- spInterp_adw(X, Y, range, res = cellsize, cdd = cdd)
+print(str(r))
+```
+
+
+## 2. 测试网格大小
+
+> 只做目标区域的插值
+
+```{r}
+cellsize = 0.01
+range = st_range(basin, cellsize)
+
+ra = make_rast(range, cellsize)
+values(ra) = 1:size(ra)
+
+plot(ra)
+plot(vect(basin), add=TRUE)
+```
+
+
+```{r}
+sites = colnames(df_mat)[-1]
+st = st_met2481[site %in% sites, ]
+# all.equal(sites, as.character(st$site))
+X <- st[, .(lon, lat)] |> as.matrix()
+Y <- df_mat2[, -1] |> as.matrix() |> t() #[, 1:10] # 这里应该取60年以后
+
+cdd = 200
+# cdd = 500
+# l = cal_weight(X, range, res=cellsize, cdd = cdd, wFUN = "wFUN_adw")
+# weight = do.call(rbind, l) %>% as.data.table()  
+
+system.time({
+  r <- spInterp_adw(X, Y, range, res = cellsize, cdd = cdd)
+})
+print(str(r))
+```
+
+## 3. 转为nc文件
+
+```{r}
+res <- r %$% cbind(coord, predicted)
+ra <- rast(res, extent = ext(range))
+
+# ra2 <- ra |> mask(vect(bou1_4p))
+dates <- names(ra2) |> date()
+time(ra) <- df_mat2$date
+
+fout <- sprintf("Hubei_mete169_prcp_hourly_1951-2015_G%03d_cdd=%d.nc", cellsize * 100, cdd)
+writeCDF(ra, fout, "prcp", "precipitation", "mm/h",
+  prec="float", compression=1,
+  overwrite = TRUE)
+```
+
+
+### 日降水
+
+```{r}
+times = df_mat2$date #+ dhour(8)
+dates = as_date(times) # , zone = Sys.timezone()
+# head(dates)
+grps = unique(dates)
+
+lst = foreach(grp = grps, i = icount()) %do% {
+  runningId(i, 100)
+  inds = dates == grp
+  sum(ra[[inds]], na.rm = TRUE)
+}
+ra_day = do.call(c, lst)
+```
+
+```{r}
+f_day <- sprintf("Hubei_mete169_prcp_daily_1951-2015_G%03d_cdd=%d.nc", cellsize * 100, cdd)
+writeCDF(ra_day, f_day, "prcp", "precipitation", "mm/d",
+  prec="float", compression=1,
+  overwrite = TRUE)
+```
+
+
+### 3.1. 年降水
+
+```{r}
+dates = df_mat2$date
+years = year(dates)
+
+
+lst = foreach(year = 1960:2015, i = icount()) %do% {
+  runningId(i)
+  inds = years == year
+  sum(ra[[inds]], na.rm = TRUE)
+}
+ra_year = do.call(c, lst)
+# for (year in 1960:2015)
+```
+
+```{r}
+f_year <- sprintf("Hubei_mete169_prcp_yearly_1951-2015_G%03d_cdd=%d.nc", cellsize * 100, cdd)
+writeCDF(ra_year, f_year, "prcp", "precipitation", "mm/y",
+  prec="float", compression=1,
+  overwrite = TRUE)
+```
+
+```{r}
+## 站点稀少，连续型没有这么好
+write_fig({
+  plot(ra_year[[1:10]])
+})
+```
+
+
+```bash
+# wsl
+cdo -f nc4 -z zip_1  yearsum infile outfile
+```
+
+## 4. 整个湖北省
+
+```{r}
+# range = c(108.3, 116.2, 29, 33.3)
+# # box = st_rect(range)
+# ra_big = make_rast(range, cellsize)
+# ra_big
+```
