@@ -4,3 +4,4 @@
 ^README\.Rmd$
 ^scripts$
 ^data-raw$
+^inst/anusplin_doc$
